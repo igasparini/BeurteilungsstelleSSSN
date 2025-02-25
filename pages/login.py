@@ -16,9 +16,9 @@ def login_page():
     # Apply custom CSS
     st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
     
-    with st.container():
-        st.markdown('<div class="login-container">', unsafe_allow_html=True)
-        
+    left, middle, right = st.columns(3)
+    
+    with left:
         st.subheader("Login to access the analyzer")
         
         username = st.text_input("Username")
@@ -47,9 +47,7 @@ def login_page():
                     st.info("Please contact your administrator to reset your password.")
                 else:
                     st.error("Please enter your username")
-        
-        st.markdown('</div>', unsafe_allow_html=True)
     
-    # Footer
-    st.markdown('---')
-    st.markdown(f'<p style="text-align: center;">{COPYRIGHT}</p>', unsafe_allow_html=True)
+    # # Footer
+    # st.markdown('---')
+    # st.markdown(f'<p style="text-align: center;">{COPYRIGHT}</p>', unsafe_allow_html=True)

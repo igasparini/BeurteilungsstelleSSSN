@@ -14,19 +14,17 @@ def field_layout_tool():
     st.markdown("---")
     
     # Placeholder content with tabs for organization
-    tabs = st.tabs(["Site Planning", "Terrain Analysis", "Barrier Layout", "Export"])
+    tabs = st.tabs(["DSM Upload", "Barrier Layout", "Export"])
     
     with tabs[0]:
-        st.header("Site Planning")
+        st.header("Digital Surface Model Upload")
         st.info("This module is currently under development.")
         
         # Placeholder for site planning features
         st.markdown("""
-        ### Coming Soon:
-        - Site topography import
-        - Risk zone identification
-        - Multiple barrier placement optimization
-        - Cost estimation tools
+        ### Coming Eventually:
+        - Upload DSM
+        - Select barrier placement zone
         """)
         
         # Demonstration image placeholder
@@ -37,16 +35,14 @@ def field_layout_tool():
         """, unsafe_allow_html=True)
     
     with tabs[1]:
-        st.header("Terrain Analysis")
+        st.header("Barrier Layout")
         st.info("This module is currently under development.")
         
         # Placeholder for terrain analysis features
         st.markdown("""
-        ### Coming Soon:
-        - Slope inclination analysis
-        - Rockfall trajectory simulation
-        - Impact energy calculation
-        - Soil condition assessment
+        ### Coming Eventually:
+        - Automatic barrier layout with proper geometry constraints
+        - Manual editing
         """)
         
         # Demonstration image placeholder
@@ -57,44 +53,24 @@ def field_layout_tool():
         """, unsafe_allow_html=True)
     
     with tabs[2]:
-        st.header("Barrier Layout")
-        st.info("This module is currently under development.")
-        
-        # Placeholder for barrier layout features
-        st.markdown("""
-        ### Coming Soon:
-        - Barrier height optimization
-        - Support placement configuration
-        - Cable network design
-        - Retention capacity calculation
-        """)
-        
-        # Demonstration image placeholder
-        st.markdown("""
-        <div style="background-color: #f0f0f0; height: 300px; display: flex; align-items: center; justify-content: center; border-radius: 10px;">
-            <span style="color: #666;">Barrier layout visualization will appear here</span>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with tabs[3]:
         st.header("Export & Documentation")
         st.info("This module is currently under development.")
         
         # Placeholder for export features
         st.markdown("""
-        ### Coming Soon:
-        - Layout export to CAD formats
-        - Technical specifications
-        - Bill of materials generation
-        - Installation guidelines
+        ### Coming Eventually:
+        - Layout export
+            - CAD formats
+            - Relevant GPS coordinates
+            - ...
         """)
         
         # Placeholder export buttons
         col1, col2 = st.columns(2)
         with col1:
-            st.button("Export to CAD (Coming Soon)", disabled=True)
+            st.button("Export to CAD (Coming Eventually)", disabled=True)
         with col2:
-            st.button("Generate Documentation (Coming Soon)", disabled=True)
+            st.button("Generate Documentation (Coming Eventually)", disabled=True)
     
     # Footer
     st.markdown("---")

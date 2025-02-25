@@ -1,25 +1,59 @@
 import streamlit as st
 from config import CUSTOM_CSS, COPYRIGHT, APP_TITLE
+from PIL import Image
+import os
 
 def landing_page():
     """Display the main landing page with tool selection"""
     # Apply custom CSS for better styling
     st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
     
-    # Centered title
-    st.markdown('<h1 class="centered-title">Beurteilungsstelle Steinschlagschutznetze</h1>', unsafe_allow_html=True)
-    
-    # Logo container
-    st.markdown('<div class="logo-container">', unsafe_allow_html=True)
-
-    # Create a simple logo placeholder with centered styling
+    # Add additional CSS for logo positioning
     st.markdown("""
-    <div style="background-color: #f0f0f0; padding: 20px; border-radius: 10px; margin: 0 auto; max-width: 600px; text-align: center;">
-        <h2 style="margin: 0; color: #333;">Beurteilungsstelle Steinschlagschutznetze</h2>
-        <p style="margin: 5px 0 0 0; color: #666;">Swiss Federal Assessment Center for Rockfall Protection</p>
-    </div>
+    <style>
+    .logo-section {
+        margin-bottom: 30px;
+    }
+    .logo-container {
+        text-align: left;
+        margin-bottom: 10px;
+    }
+    .title-container {
+        text-align: center;
+        margin-bottom: 40px;
+    }
+    </style>
     """, unsafe_allow_html=True)
-
+    
+    # Logo and title section
+    st.markdown('<div class="logo-section">', unsafe_allow_html=True)
+    
+    # Logo on top left
+    st.markdown('<div class="logo-container">', unsafe_allow_html=True)
+    logo_path = "assets/logo.png"  # Adjust path to match your logo location
+    
+    # Check if logo file exists
+    if os.path.exists(logo_path):
+        logo = Image.open(logo_path)
+        st.image(logo, width=300)  # Adjust width as needed
+    else:
+        # Fallback if image not found
+        st.warning("Logo image not found. Please add the image file to assets/logo.png")
+        
+        # Placeholder rectangle for logo position
+        st.markdown("""
+        <div style="background-color: #f0f0f0; padding: 20px; border-radius: 10px; width: 200px; height: 80px; text-align: center;">
+            <p style="margin: 0; color: #666;">Logo</p>
+        </div>
+        """, unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Title centered under the logo
+    st.markdown('<div class="title-container">', unsafe_allow_html=True)
+    st.markdown(f'<h1 style="text-align: center;">{APP_TITLE}</h1>', unsafe_allow_html=True)
+    st.markdown('<p style="text-align: center; color: #666;">Swiss Federal Assessment Center for Rockfall Protection</p>', unsafe_allow_html=True)
+    st.markdown('</div>', unsafe_allow_html=True)
+    
     st.markdown('</div>', unsafe_allow_html=True)
     
     # Centered "Select a Tool" heading
