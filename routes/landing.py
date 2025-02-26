@@ -67,40 +67,7 @@ def landing_page():
     # Centered "Select a Tool" heading
     st.markdown(f'<h3 class="centered-title">{get_translation("select_tool", lang)}</h3>', unsafe_allow_html=True)
     
-    # # Create two columns for the tool options
-    # col1, col2 = st.columns(2)
-    
-    # with col1:
-    #     # Tool card for the analyzer
-    #     st.markdown(f"""
-    #     <div class="tool-card" id="analyzer-card">
-    #         <h3>{get_translation("barrier_analyzer", lang)}</h3>
-    #         <p>{get_translation("analyzer_desc", lang)}</p>
-    #     </div>
-    #     """, unsafe_allow_html=True)
-        
-    #     # Button for analyzer that spans the entire width
-    #     if st.button(get_translation("barrier_analyzer", lang), key="analyzer_btn", use_container_width=True):
-    #         st.session_state.active_tool = 'analyzer'
-    #         st.session_state.current_page = 'login'
-    #         st.rerun()
-    
-    # with col2:
-    #     # Tool card for the layout tool
-    #     st.markdown(f"""
-    #     <div class="tool-card" id="layout-card">
-    #         <h3>{get_translation("field_layout_tool", lang)}</h3>
-    #         <p>{get_translation("layout_desc", lang)}</p>
-    #     </div>
-    #     """, unsafe_allow_html=True)
-        
-    #     # Button for field layout tool that spans the entire width
-    #     if st.button(get_translation("field_layout_tool", lang), key="layout_btn", use_container_width=True):
-    #         st.session_state.active_tool = 'field_layout'
-    #         st.session_state.current_page = 'field_layout_tool'
-    #         st.rerun()
-
-    # Add this CSS to blend the button into the card
+    # Custom CSS to merge tool card and button
     st.markdown("""
     <style>
     .tool-card {

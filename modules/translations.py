@@ -472,10 +472,16 @@ TRANSLATIONS = {
         "fr": "Géométrie de la barrière mise à jour avec succès !",
         "it": "Geometria della barriera aggiornata con successo!"
     },
+    "barrier_schema": {
+        "en": "Barrier Schema",
+        "de": "Schema",
+        "fr": "Schema",
+        "it": "Schema"
+    },
     "schema_reference": {
         "en": "Refer to the schema for the meaning of each parameter:",
         "de": "Beziehen Sie sich auf das Schema für die Bedeutung jedes Parameters:",
-        "fr": "Référez-vous au schéma pour la signification de chaque paramètre :",
+        "fr": "Référez-vous au schéma pour la signification de chaque paramètre:",
         "it": "Fare riferimento allo schema per il significato di ciascun parametro:"
     },
     "parameters": {
@@ -908,7 +914,7 @@ TRANSLATIONS = {
     },
     "select_barrier_zone": {
         "en": "Select barrier placement zone",
-        "de": "Barrierenplatzierungszone auswählen",
+        "de": "Absteckungszone auswählen",
         "fr": "Sélectionner la zone de placement de la barrière",
         "it": "Seleziona zona di posizionamento della barriera"
     },
@@ -920,14 +926,14 @@ TRANSLATIONS = {
     },
     "auto_barrier_layout": {
         "en": "Automatic barrier layout with proper geometry constraints",
-        "de": "Automatische Barriereneinstellung mit geeigneten Geometriebeschränkungen",
+        "de": "Automatische Barrierenanordnung mit geeigneten Geometriebeschränkungen",
         "fr": "Disposition automatique de la barrière avec des contraintes géométriques appropriées",
         "it": "Layout automatico della barriera con vincoli geometrici adeguati"
     },
     "manual_editing": {
         "en": "Manual editing",
         "de": "Manuelle Bearbeitung",
-        "fr": "Édition manuelle",
+        "fr": "Modification manuelle",
         "it": "Modifica manuale"
     },
     "terrain_analysis_viz": {

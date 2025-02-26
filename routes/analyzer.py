@@ -9,6 +9,8 @@ from modules.visualization import create_barrier_diagram, create_top_view, creat
 from modules.data import save_barrier_config
 from modules.translations import get_translation
 from config import get_config
+import os
+from PIL import Image
 
 def analyzer_page():
     """Display the main analyzer page with barrier configuration and force calculation"""
@@ -146,13 +148,30 @@ def analyzer_page():
                 st.session_state.barrier_config = calculate_3d_coordinates(params)
                 save_barrier_config(st.session_state.username, st.session_state.barrier_config)
                 st.success(get_translation("geometry_updated", lang))
-        
-        with col2:
+
             # Display barrier schema
             st.markdown(f"### {get_translation('barrier_schema', lang)}")
-            st.markdown(f"""
-            {get_translation('schema_reference', lang)}
+
+            st.markdown('<div class="schema-container">', unsafe_allow_html=True)
+            schema_path = "assets/schema.png"  # Adjust path to match your schema location
             
+            # Check if schema file exists
+            if os.path.exists(schema_path):
+                schema = Image.open(schema_path)
+                st.image(schema, use_container_width=True)  # Adjust width as needed
+            else:
+                # Fallback if image not found
+                st.warning("schema image not found. Please add the image file to assets/schema.png")
+                
+                # Placeholder rectangle for schema position
+                st.markdown("""
+                <div style="background-color: #f0f0f0; padding: 20px; border-radius: 10px; width: 200px; height: 80px; text-align: center;">
+                    <p style="margin: 0; color: #666;">schema</p>
+                </div>
+                """, unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+
+            st.markdown(f"""
             **{get_translation('parameters', lang)}:**
             
             **θ ({get_translation('theta', lang)})**: {get_translation('theta_desc', lang)}
@@ -170,8 +189,9 @@ def analyzer_page():
             **h**: {get_translation('h_desc', lang)}
             **L**: {get_translation('L_desc', lang)}
             """)
-            
-            # Display simple diagram of barrier using current configuration
+        
+        with col2:
+            # Display preview of barrier using current configuration
             st.markdown(f"### {get_translation('current_config_preview', lang)}")
             
             view_type = st.radio(
