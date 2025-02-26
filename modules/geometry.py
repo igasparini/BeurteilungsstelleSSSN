@@ -71,10 +71,6 @@ def calculate_3d_coordinates(params):
         y = i * d
         z = terrain_height(x)
         
-        # For the supports to be orthogonal to terrain
-        # The terrain normal vector is now [-sin(phi), 0, cos(phi)]
-        # Apply epsilon inclination around the y-axis
-        
         # Support top point calculation
         top_x = x - L * np.sin(phi) * np.cos(epsilon) + L * np.cos(phi) * np.sin(epsilon)
         top_y = y
@@ -90,16 +86,15 @@ def calculate_3d_coordinates(params):
     num_anchors = params['num_supports'] + 1
     for i in range(num_anchors):
         # Determine position based on field structure
-        # CORRECTED: Retention anchors should be on the upslope side (positive x)
         if i == 0:  # First anchor
-            x = a/2  # Changed from -a/2 to a/2 to place on upslope
+            x = a
             y = -b
         elif i == num_anchors-1:  # Last anchor
-            x = a/2  # Changed from -a/2 to a/2 to place on upslope
+            x = a 
             y = total_length + b
         else:
             # Intermediate anchors are beside supports
-            x = a/2  # Changed from -a/2 to a/2 to place on upslope
+            x = a/2
             y = (i-1) * d
         
         # Calculate anchor height based on terrain inclination

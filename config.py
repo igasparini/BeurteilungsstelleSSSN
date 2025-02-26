@@ -11,7 +11,7 @@ def get_config():
         "APP_TITLE": get_translation("app_title", lang),
         "COPYRIGHT": get_translation("copyright", lang),
         "DEFAULT_ADMIN_USERNAME": "admin",
-        "DEFAULT_ADMIN_PASSWORD": "admin",
+        "DEFAULT_ADMIN_PASSWORD": "v",
         "USERS_FILE": "users.json",
         "CABLE_TYPES": {
             'rhs': {'name': get_translation("rhs", lang), 'color': 'green'},
@@ -70,7 +70,7 @@ COPYRIGHT = "© 2025 Beurteilungsstelle Steinschlagschutznetze. All Rights Reser
 
 # Default admin credentials
 DEFAULT_ADMIN_USERNAME = "admin"
-DEFAULT_ADMIN_PASSWORD = "admin"
+DEFAULT_ADMIN_PASSWORD = "v"
 
 # File paths
 USERS_FILE = "users.json"
