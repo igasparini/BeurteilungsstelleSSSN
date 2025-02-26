@@ -3,7 +3,7 @@ import pandas as pd
 import json
 import base64
 from datetime import datetime
-from modules.geometry import get_default_params, calculate_3d_coordinates
+from modules.geometry import get_default_params, calculate_3d_coordinates, calculate_tau, calculate_b_from_delta, calculate_d_from_theta, calculate_delta, calculate_epsilon_from_tau, calculate_theta
 from modules.forces import calculate_forces
 from modules.visualization import create_barrier_diagram, create_top_view, create_3d_view
 from modules.data import save_barrier_config
@@ -11,6 +11,85 @@ from modules.translations import get_translation
 from config import get_config
 import os
 from PIL import Image
+
+def update_on_dimension_change():
+    """Update angle parameters when dimension parameters change"""
+    # Make sure we're not already in an angle parameter update cycle
+    if 'updating_angles' in st.session_state and st.session_state.updating_angles:
+        return
+    
+    st.session_state.updating_dimensions = True
+    
+    # Get current parameters
+    params = st.session_state.barrier_config['params']
+    
+    # Calculate tau
+    params['tau'] = calculate_tau(
+        params['epsilon'], 
+        params['h'], 
+        params['L'], 
+        params['f']
+    )
+    
+    # Calculate theta
+    params['theta'] = calculate_theta(
+        params['d'], 
+        params['h'], 
+        params['L'], 
+        params['epsilon'], 
+        params['f']
+    )
+    
+    # Calculate delta
+    params['delta'] = calculate_delta(
+        params['L'], 
+        params['b']
+    )
+    
+    # Update session state
+    st.session_state.barrier_config['params'] = params
+    st.session_state.updating_dimensions = False
+
+def update_on_angle_change(angle_changed):
+    """Update dimension parameters when angle parameters change"""
+    # Make sure we're not already in a dimension parameter update cycle
+    if 'updating_dimensions' in st.session_state and st.session_state.updating_dimensions:
+        return
+    
+    st.session_state.updating_angles = True
+    
+    # Get current parameters
+    params = st.session_state.barrier_config['params']
+    
+    if angle_changed == 'tau':
+        # Update epsilon based on tau
+        params['epsilon'] = calculate_epsilon_from_tau(
+            params['tau'], 
+            params['h'], 
+            params['L'], 
+            params['f']
+        )
+    
+    if angle_changed == 'theta':
+        # Update d based on theta
+        params['d'] = calculate_d_from_theta(
+            params['theta'], 
+            params['h'], 
+            params['L'], 
+            params['epsilon'], 
+            params['f']
+        )
+    
+    if angle_changed == 'delta':
+        # Update b based on delta
+        params['b'] = calculate_b_from_delta(
+            params['delta'], 
+            params['L']
+        )
+    
+    # Update session state
+    st.session_state.barrier_config['params'] = params
+    st.session_state.updating_angles = False
 
 def analyzer_page():
     """Display the main analyzer page with barrier configuration and force calculation"""
@@ -72,34 +151,118 @@ def analyzer_page():
             
             # Create columns for parameters
             col1a, col1b = st.columns(2)
-            
+
             with col1a:
                 # Distances
-                a = st.number_input(f"a: {get_translation('distance_between_anchors', lang)} (m)", min_value=1.0, 
-                                   value=float(st.session_state.barrier_config['params']['a']), step=0.1)
-                b = st.number_input(f"b: {get_translation('edge_distance', lang)} (m)", min_value=0.5, 
-                                   value=float(st.session_state.barrier_config['params']['b']), step=0.1)
-                d = st.number_input(f"d: {get_translation('support_distance', lang)} (m)", min_value=1.0, 
-                                   value=float(st.session_state.barrier_config['params']['d']), step=0.1)
-                h = st.number_input(f"h: {get_translation('base_anchor_height', lang)} (m)", min_value=0.5, 
-                                   value=float(st.session_state.barrier_config['params']['h']), step=0.1)
-                f = st.number_input(f"f: {get_translation('foundation_overhang', lang)} (m)", min_value=0.0, 
-                                   value=float(st.session_state.barrier_config['params']['f']), step=0.1)
-                L = st.number_input(f"L: {get_translation('support_length', lang)} (m)", min_value=1.0, 
-                                   value=float(st.session_state.barrier_config['params']['L']), step=0.1)
-            
+                # a = st.number_input(
+                #     f"a: {get_translation('distance_between_anchors', lang)} (m)", 
+                #     min_value=1.0, 
+                #     value=float(st.session_state.barrier_config['params']['a']), 
+                #     step=0.5,
+                #     key="param_a",
+                #     on_change=update_on_dimension_change
+                # )
+                # st.session_state.barrier_config['params']['a'] = a
+                
+                b = st.number_input(
+                    f"b: {get_translation('edge_distance', lang)} (m)", 
+                    min_value=0.5, 
+                    value=float(st.session_state.barrier_config['params']['b']), 
+                    step=0.1,
+                    key="param_b",
+                    on_change=update_on_dimension_change
+                )
+                st.session_state.barrier_config['params']['b'] = b
+                
+                d = st.number_input(
+                    f"d: {get_translation('support_distance', lang)} (m)", 
+                    min_value=1.0, 
+                    value=float(st.session_state.barrier_config['params']['d']), 
+                    step=0.1,
+                    key="param_d"
+                )
+                st.session_state.barrier_config['params']['d'] = d
+                
+                h = st.number_input(
+                    f"h: {get_translation('base_anchor_height', lang)} (m)", 
+                    min_value=0.5, 
+                    value=float(st.session_state.barrier_config['params']['h']), 
+                    step=0.1,
+                    key="param_h",
+                    on_change=update_on_dimension_change
+                )
+                st.session_state.barrier_config['params']['h'] = h
+                
+                f = st.number_input(
+                    f"f: {get_translation('foundation_overhang', lang)} (m)", 
+                    min_value=0.0, 
+                    value=float(st.session_state.barrier_config['params']['f']), 
+                    step=0.1,
+                    key="param_f",
+                    on_change=update_on_dimension_change
+                )
+                st.session_state.barrier_config['params']['f'] = f
+                
+                L = st.number_input(
+                    f"L: {get_translation('support_length', lang)} (m)", 
+                    min_value=1.0, 
+                    value=float(st.session_state.barrier_config['params']['L']), 
+                    step=0.1,
+                    key="param_L",
+                    on_change=update_on_dimension_change
+                )
+                st.session_state.barrier_config['params']['L'] = L
+
             with col1b:
                 # Angles
-                theta = st.number_input(f"θ ({get_translation('theta', lang)}): {get_translation('retention_cable_angle', lang)} (°)", min_value=0.0, 
-                                       value=float(st.session_state.barrier_config['params']['theta']), step=1.0)
-                delta = st.number_input(f"δ ({get_translation('delta', lang)}): {get_translation('upper_support_cable_angle', lang)} (°)", min_value=0.0, 
-                                       value=float(st.session_state.barrier_config['params']['delta']), step=1.0)
-                epsilon = st.number_input(f"ε ({get_translation('epsilon', lang)}): {get_translation('support_inclination', lang)} (°)", min_value=0.0, 
-                                         value=float(st.session_state.barrier_config['params']['epsilon']), step=1.0)
-                tau = st.number_input(f"τ ({get_translation('tau', lang)}): {get_translation('support_cable_angle', lang)} (°)", min_value=0.0, 
-                                     value=float(st.session_state.barrier_config['params']['tau']), step=1.0)
-                phi = st.number_input(f"φ ({get_translation('phi', lang)}): {get_translation('terrain_inclination', lang)} (°)", min_value=0.0, 
-                                     value=float(st.session_state.barrier_config['params']['phi']), step=1.0)
+                theta = st.number_input(
+                    f"θ ({get_translation('theta', lang)}): {get_translation('retention_cable_angle', lang)} (°)", 
+                    min_value=0.0, 
+                    value=float(st.session_state.barrier_config['params']['theta']), 
+                    step=1.0,
+                    key="param_theta",
+                    on_change=lambda: update_on_angle_change('theta')
+                )
+                st.session_state.barrier_config['params']['theta'] = theta
+                
+                delta = st.number_input(
+                    f"δ ({get_translation('delta', lang)}): {get_translation('upper_support_cable_angle', lang)} (°)", 
+                    min_value=0.0, 
+                    value=float(st.session_state.barrier_config['params']['delta']), 
+                    step=1.0,
+                    key="param_delta",
+                    on_change=lambda: update_on_angle_change('delta')
+                )
+                st.session_state.barrier_config['params']['delta'] = delta
+                
+                epsilon = st.number_input(
+                    f"ε ({get_translation('epsilon', lang)}): {get_translation('support_inclination', lang)} (°)", 
+                    min_value=0.0, 
+                    value=float(st.session_state.barrier_config['params']['epsilon']), 
+                    step=1.0,
+                    key="param_epsilon",
+                    on_change=update_on_dimension_change
+                )
+                st.session_state.barrier_config['params']['epsilon'] = epsilon
+                
+                tau = st.number_input(
+                    f"τ ({get_translation('tau', lang)}): {get_translation('support_cable_angle', lang)} (°)", 
+                    min_value=0.0, 
+                    value=float(st.session_state.barrier_config['params']['tau']), 
+                    step=1.0,
+                    key="param_tau",
+                    on_change=lambda: update_on_angle_change('tau')
+                )
+                st.session_state.barrier_config['params']['tau'] = tau
+                
+                phi = st.number_input(
+                    f"φ ({get_translation('phi', lang)}): {get_translation('terrain_inclination', lang)} (°)", 
+                    min_value=0.0, 
+                    value=float(st.session_state.barrier_config['params']['phi']), 
+                    step=1.0,
+                    key="param_phi"
+                )
+                st.session_state.barrier_config['params']['phi'] = phi
             
             # Optional intermediate cables
             st.markdown(f"### {get_translation('optional_components', lang)}")
@@ -126,7 +289,7 @@ def analyzer_page():
             # Create parameters dictionary
             params = {
                 'num_supports': num_supports,
-                'a': a,
+                # 'a': a,
                 'b': b,
                 'd': d,
                 'h': h,

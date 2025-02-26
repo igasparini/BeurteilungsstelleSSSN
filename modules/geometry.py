@@ -9,42 +9,116 @@ def rad_to_deg(radians):
     return radians * 180.0 / np.pi
 
 def calculate_tau(epsilon, h, L, f):
-    tau_rad = epsilon + np.arctan2(h - L * np.sin(epsilon), L * np.cos(epsilon) + f)
+    """Calculate tau angle based on epsilon, h, L, and f"""
+    epsilon_rad = deg_to_rad(epsilon)
+    tau_rad = epsilon_rad + np.arctan2(h - L * np.sin(epsilon_rad), L * np.cos(epsilon_rad) + f)
     tau_deg = rad_to_deg(tau_rad)
-    return tau_rad, tau_deg
+    return round(tau_deg, 1)
 
-def calculate_theta(a, h, L, epsilon, f):
-    numerator = a / 2
-    denominator = np.sqrt((h - L * np.sin(epsilon))**2 + (L * np.cos(epsilon) + f)**2)
-    beta_rad = np.arctan2(numerator, denominator)
-    beta_deg = rad_to_deg(beta_rad)
-    return beta_rad, beta_deg
+def calculate_theta(d, h, L, epsilon, f):
+    """Calculate theta angle based on a, h, L, epsilon, and f"""
+    epsilon_rad = deg_to_rad(epsilon)
+    numerator = d / 2
+    denominator = np.sqrt((h - L * np.sin(epsilon_rad))**2 + (L * np.cos(epsilon_rad) + f)**2)
+    theta_rad = np.arctan2(numerator, denominator)
+    theta_deg = rad_to_deg(theta_rad)
+    return round(theta_deg, 1)
 
 def calculate_delta(L, b):
+    """Calculate delta angle based on L and b"""
     delta_rad = np.arctan2(L, b)
     delta_deg = rad_to_deg(delta_rad)
-    return delta_rad, delta_deg
+    return round(delta_deg, 1)
+
+def calculate_epsilon_from_tau(tau, h, L, f):
+    """Calculate epsilon based on tau, h, L, and f"""
+    tau_rad = deg_to_rad(tau)
+    
+    # Use a numerical approach with 1000 test points
+    epsilon_range = np.linspace(0, 89, 1000)  # Avoid 90 degrees
+    min_error = float('inf')
+    best_epsilon = 10.0  # Default
+    
+    for eps in epsilon_range:
+        eps_rad = deg_to_rad(eps)
+        calculated_tau_rad = eps_rad + np.arctan2(h - L * np.sin(eps_rad), L * np.cos(eps_rad) + f)
+        error = abs(calculated_tau_rad - tau_rad)
+        
+        if error < min_error:
+            min_error = error
+            best_epsilon = eps
+    
+    return round(best_epsilon, 1)
+
+def calculate_d_from_theta(theta, h, L, epsilon, f):
+    """Calculate d based on theta, h, L, epsilon, and f"""
+    theta_rad = deg_to_rad(theta)
+    epsilon_rad = deg_to_rad(epsilon)
+    
+    # Compute denominator
+    denominator = np.sqrt((h - L * np.sin(epsilon_rad))**2 + (L * np.cos(epsilon_rad) + f)**2)
+    
+    # Calculate d
+    d = 2 * denominator * np.tan(theta_rad)
+    
+    return round(max(1.0, d), 1)  # Ensure a is at least the minimum value
+
+def calculate_b_from_delta(delta, L):
+    """Calculate b based on delta and L"""
+    delta_rad = deg_to_rad(delta)
+    
+    # Avoid division by zero or very small tangent
+    if delta_rad < 0.01 or np.abs(np.tan(delta_rad)) < 0.01:
+        return 50.0  # A large default value
+    
+    # Calculate b
+    b = L / np.tan(delta_rad)
+    
+    return round(max(0.5, b), 1)  # Ensure b is at least the minimum value
 
 def get_default_params():
-    """Return default parameter values"""
-    return {
+    """Return default parameter values with calculated angles"""
+    base_params = {
         'num_supports': 4,
-        'a': 10.0,
+        # 'a': 10.0,
         'b': 8.0,
         'd': 10.0,
         'h': 6.0,
         'f': 0.5,
         'L': 5.0,
-        'theta': 30.0,
-        'delta': 45.0,
+        'epsilon': 10.0,
+        'phi': 15.0,
         'delta1': 0.0,
         'delta2': 0.0,
-        'epsilon': 10.0,
-        'tau': 20.0,
-        'phi': 15.0,
         'has_delta1': False,
         'has_delta2': False
     }
+    
+    theta = calculate_theta(
+        base_params['d'], 
+        base_params['h'], 
+        base_params['L'], 
+        base_params['epsilon'], 
+        base_params['f']
+    )
+    
+    delta = calculate_delta(
+        base_params['L'], 
+        base_params['b']
+    )
+    
+    tau = calculate_tau(
+        base_params['epsilon'], 
+        base_params['h'], 
+        base_params['L'], 
+        base_params['f']
+    )
+    
+    base_params['theta'] = theta
+    base_params['delta'] = delta
+    base_params['tau'] = tau
+    
+    return base_params
 
 def calculate_3d_coordinates(params):
     """
@@ -52,7 +126,7 @@ def calculate_3d_coordinates(params):
     based on the geometric parameters.
     """
     # Extract parameters
-    a = params['a']  # Distance between anchors of retention cables
+    # a = params['a']  # Distance between anchors of retention cables
     b = params['b']  # Distance between edge support and anchor of upper support cable
     d = params['d']  # Distance between supports
     f = params['f']  # Overhang of foundation
@@ -124,16 +198,16 @@ def calculate_3d_coordinates(params):
     for i in range(num_anchors):
         # Determine position based on field structure
         if i == 0:  # First anchor
-            x = a
-            y = -b
+            x = h
+            y = -d/2
         elif i == num_anchors-1:  # Last anchor
-            x = a 
-            y = total_length + b
+            x = h
+            y = total_length + d/2
         else:
             # Intermediate anchors are at distance 'a' from the support line (x=0)
             # and aligned with the supports along the y-axis
-            x = a
-            y = (i-1) * d
+            x = h
+            y = (i-1) * d + d/2
         
         # Calculate anchor height based on terrain inclination
         z = terrain_height(x)
