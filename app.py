@@ -39,7 +39,7 @@ if 'barrier_config' not in st.session_state:
 
 # Initialize language if not present (default to English)
 if 'language' not in st.session_state:
-    st.session_state.language = "en"
+    st.session_state.language = "de"
 
 # --- SIDEBAR WITH LANGUAGE SELECTOR ---
 with st.sidebar:

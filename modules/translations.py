@@ -133,14 +133,14 @@ TRANSLATIONS = {
     },
     # Analyzer page
     "geometry_setup": {
-        "en": "Geometry Setup",
-        "de": "Geometrie-Einrichtung",
-        "fr": "Configuration des géométries",
-        "it": "Impostazione della geometria"
+        "en": "Geometries",
+        "de": "Geometrien",
+        "fr": "Géométries",
+        "it": "Geometrie"
     },
     "force_measurement": {
-        "en": "Force Measurement",
-        "de": "Kraftmessung",
+        "en": "Force Measurements",
+        "de": "Kraftmessungen",
         "fr": "Mesures des forces",
         "it": "Misurazioni delle forze"
     },
@@ -1459,7 +1459,7 @@ TRANSLATIONS = {
     }
 }
 
-def get_translation(key, lang="en"):
+def get_translation(key, lang="de"):
     if key in TRANSLATIONS:
         if lang in TRANSLATIONS[key]:
             return TRANSLATIONS[key][lang]

@@ -3,15 +3,15 @@ from modules.translations import get_translation
 
 def language_selector():
     if 'language' not in st.session_state:
-        st.session_state.language = "en"  # Default to English
+        st.session_state.language = "de"  # Default to german
     
     current_lang = st.session_state.language
     
     langs = {
-        "en": get_translation("english", current_lang),
         "de": get_translation("german", current_lang),
         "fr": get_translation("french", current_lang),
-        "it": get_translation("italian", current_lang)
+        "it": get_translation("italian", current_lang),
+        "en": get_translation("english", current_lang)
     }
     
     selected_lang = st.selectbox(

@@ -7,7 +7,7 @@ import os
 def landing_page():
     """Display the main landing page with tool selection"""
     # Get current language
-    lang = st.session_state.get('language', 'en')
+    lang = st.session_state.get('language', 'de')
     
     # Get translated configuration
     config = get_config()
@@ -58,7 +58,8 @@ def landing_page():
     # Title centered under the logo
     st.markdown('<div class="title-container">', unsafe_allow_html=True)
     st.markdown(f'<h1 style="text-align: center;">{config["APP_TITLE"]}</h1>', unsafe_allow_html=True)
-    st.markdown(f'<p style="text-align: center; color: #666;">{get_translation("contact_info", lang)}</p>', unsafe_allow_html=True)
+    contact_info = get_translation("contact_info", lang).replace('\n', '<br>')
+    st.markdown(f'<p style="text-align: center; color: #666;">{contact_info}</p>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
@@ -66,34 +67,88 @@ def landing_page():
     # Centered "Select a Tool" heading
     st.markdown(f'<h3 class="centered-title">{get_translation("select_tool", lang)}</h3>', unsafe_allow_html=True)
     
-    # Create two columns for the tool options
-    col1, col2 = st.columns(2)
+    # # Create two columns for the tool options
+    # col1, col2 = st.columns(2)
     
+    # with col1:
+    #     # Tool card for the analyzer
+    #     st.markdown(f"""
+    #     <div class="tool-card" id="analyzer-card">
+    #         <h3>{get_translation("barrier_analyzer", lang)}</h3>
+    #         <p>{get_translation("analyzer_desc", lang)}</p>
+    #     </div>
+    #     """, unsafe_allow_html=True)
+        
+    #     # Button for analyzer that spans the entire width
+    #     if st.button(get_translation("barrier_analyzer", lang), key="analyzer_btn", use_container_width=True):
+    #         st.session_state.active_tool = 'analyzer'
+    #         st.session_state.current_page = 'login'
+    #         st.rerun()
+    
+    # with col2:
+    #     # Tool card for the layout tool
+    #     st.markdown(f"""
+    #     <div class="tool-card" id="layout-card">
+    #         <h3>{get_translation("field_layout_tool", lang)}</h3>
+    #         <p>{get_translation("layout_desc", lang)}</p>
+    #     </div>
+    #     """, unsafe_allow_html=True)
+        
+    #     # Button for field layout tool that spans the entire width
+    #     if st.button(get_translation("field_layout_tool", lang), key="layout_btn", use_container_width=True):
+    #         st.session_state.active_tool = 'field_layout'
+    #         st.session_state.current_page = 'field_layout_tool'
+    #         st.rerun()
+
+    # Add this CSS to blend the button into the card
+    st.markdown("""
+    <style>
+    .tool-card {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        margin-bottom: 0;
+        border-bottom: none;
+    }
+    .stButton > button {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+        background-color: #f8f9fa;
+        transition: all 0.3s;
+        border: 1px solid #ddd;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    .stButton > button:hover {
+        background-color: #e9ecef;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+    col1, col2 = st.columns(2)
+
     with col1:
         # Tool card for the analyzer
         st.markdown(f"""
-        <div class="tool-card" id="analyzer-card">
+        <div class="tool-card">
             <h3>{get_translation("barrier_analyzer", lang)}</h3>
             <p>{get_translation("analyzer_desc", lang)}</p>
         </div>
         """, unsafe_allow_html=True)
         
-        # Button for analyzer that spans the entire width
         if st.button(get_translation("barrier_analyzer", lang), key="analyzer_btn", use_container_width=True):
             st.session_state.active_tool = 'analyzer'
             st.session_state.current_page = 'login'
             st.rerun()
-    
+
     with col2:
         # Tool card for the layout tool
         st.markdown(f"""
-        <div class="tool-card" id="layout-card">
+        <div class="tool-card">
             <h3>{get_translation("field_layout_tool", lang)}</h3>
             <p>{get_translation("layout_desc", lang)}</p>
         </div>
         """, unsafe_allow_html=True)
         
-        # Button for field layout tool that spans the entire width
         if st.button(get_translation("field_layout_tool", lang), key="layout_btn", use_container_width=True):
             st.session_state.active_tool = 'field_layout'
             st.session_state.current_page = 'field_layout_tool'

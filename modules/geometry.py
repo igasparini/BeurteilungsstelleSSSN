@@ -290,7 +290,7 @@ def calculate_3d_coordinates(params):
         }
     }
     
-    # Create catching cables (Fangseil) between supports
+    # Create catching cables (Zwischenseil) between supports
     for i in range(params['num_supports'] - 1):
         cable_id = f'faS{i+1}'
         start_id = f's{i+1}'
@@ -299,8 +299,8 @@ def calculate_3d_coordinates(params):
         cables[cable_id] = {
             'start': start_id,
             'end': end_id,
-            'type': 'fa',
-            'name': f'Fa S{i+1}',
+            'type': 'zw',
+            'name': f'Zw S{i+1}',
             'force': 0.0,
             'has_load_cell': True,
             'color': 'gold',
