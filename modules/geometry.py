@@ -600,32 +600,75 @@ def calculate_3d_coordinates(params):
             'name': f'S{i+1}'
         }
     
-    # Calculate retention cable anchor positions
     num_anchors = params['num_supports'] + 1
     for i in range(num_anchors):
-        # Determine position based on field structure
+        # Determine y-position based on field structure
         if i == 0:  # First anchor
-            x = h
             y = -d/2
         elif i == num_anchors-1:  # Last anchor
-            x = h
             y = total_length + d/2
         else:
-            # Intermediate anchors are at distance 'a' from the support line (x=0)
-            # and aligned with the supports along the y-axis
-            x = h
             y = (i-1) * d + d/2
         
-        # Calculate anchor height based on terrain inclination
-        z = terrain_height(x)
+        # Determine which support this anchor connects to
+        if i == 0:
+            support_index = 0
+        elif i == num_anchors-1:
+            support_index = params['num_supports'] - 1
+        else:
+            support_index = i - 1
+            
+        support_id = f's{support_index+1}'
         
-        # Add height offset h for retention cable anchors
-        z_offset = 0.0
-
-        anchors[f'v{i+1}'] = {
-            'position': {'x': x, 'y': y, 'z': z + z_offset},
-            'name': f'V{i+1}'
-        }
+        # Get the top position of the connected support
+        if support_id in supports:
+            support_top = supports[support_id]['top']
+            support_base = supports[support_id]['base']
+            
+            # Calculate direction vector for retention cable using tau angle
+            # tau is the angle between support axis and retention cable axis
+            
+            # First, create the support direction vector
+            support_dir = {
+                'x': support_top['x'] - support_base['x'],
+                'y': support_top['y'] - support_base['y'],
+                'z': support_top['z'] - support_base['z']
+            }
+            
+            # Calculate the retention cable direction based on tau angle
+            # This is a simplified calculation; a more sophisticated one would use proper 3D rotation
+            
+            # Place the anchor at a distance where the angle between support and cable is tau
+            # and the horizontal distance is approximately h
+            x = h
+            z = terrain_height(x)
+            
+            # Fine-tune z to achieve the desired tau angle
+            # This is an approximation
+            base_to_anchor_x = x - support_base['x']
+            base_to_anchor_z = z - support_base['z']
+            support_length_xz = np.sqrt(support_dir['x']**2 + support_dir['z']**2)
+            
+            # Calculate ideal z using tau angle constraint
+            # tau is the angle between support and retention cable
+            # This is simplified 2D calculation in the x-z plane
+            ideal_angle = tau - epsilon  # Adjusting for support inclination
+            
+            # Adjust z to achieve correct tau angle
+            ideal_z_offset = base_to_anchor_x * np.tan(ideal_angle)
+            z = support_base['z'] + ideal_z_offset
+            
+            # Final anchor position
+            anchors[f'v{i+1}'] = {
+                'position': {'x': x, 'y': y, 'z': z},
+                'name': f'V{i+1}'
+            }
+        else:
+            # Fallback if support not found
+            anchors[f'v{i+1}'] = {
+                'position': {'x': h, 'y': y, 'z': terrain_height(h)},
+                'name': f'V{i+1}'
+            }
 
     # Calculate positions for upper support cable anchors (more distant from supports)
     anchors['tso1_anchor'] = {

@@ -30,8 +30,14 @@ def handle_parameter_change(param_name):
     params = st.session_state.barrier_config['params']
     updated_params, changed_params, validation, warnings = apply_parameter_changes(params, param_name, new_value)
     
-    # Update session state
+    # Update session state parameters
     st.session_state.barrier_config['params'] = updated_params
+    
+    # Recalculate 3D coordinates with updated parameters
+    st.session_state.barrier_config = calculate_3d_coordinates(updated_params)
+    
+    # Save the updated configuration
+    save_barrier_config(st.session_state.username, st.session_state.barrier_config)
     
     # Display warnings if any
     if warnings:
