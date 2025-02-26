@@ -620,9 +620,8 @@ def calculate_3d_coordinates(params):
         z = terrain_height(x)
         
         # Add height offset h for retention cable anchors
-        z_offset = h
-        
-        # Anchor position (x, y, z)
+        z_offset = 0.0
+
         anchors[f'v{i+1}'] = {
             'position': {'x': x, 'y': y, 'z': z + z_offset},
             'name': f'V{i+1}'
@@ -652,12 +651,12 @@ def calculate_3d_coordinates(params):
     
     # Calculate positions for lateral bracing anchors (seitliche Abspannung)
     anchors['sa1_anchor'] = {
-        'position': {'x': 0, 'y': -b, 'z': terrain_height(0) - h/2},
+        'position': {'x': 0, 'y': -b, 'z': terrain_height(0)},
         'name': 'Sa1 Anchor'
     }
     
     anchors['sa2_anchor'] = {
-        'position': {'x': 0, 'y': total_length + b, 'z': terrain_height(0) - h/2},
+        'position': {'x': 0, 'y': total_length + b, 'z': terrain_height(0)},
         'name': 'Sa2 Anchor'
     }
     
