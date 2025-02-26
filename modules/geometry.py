@@ -16,7 +16,7 @@ def calculate_tau(epsilon, h, L, f):
     return round(tau_deg, 1)
 
 def calculate_theta(d, h, L, epsilon, f):
-    """Calculate theta angle based on a, h, L, epsilon, and f"""
+    """Calculate theta angle based on d, h, L, epsilon, and f"""
     epsilon_rad = deg_to_rad(epsilon)
     numerator = d / 2
     denominator = np.sqrt((h - L * np.sin(epsilon_rad))**2 + (L * np.cos(epsilon_rad) + f)**2)
@@ -61,7 +61,7 @@ def calculate_d_from_theta(theta, h, L, epsilon, f):
     # Calculate d
     d = 2 * denominator * np.tan(theta_rad)
     
-    return round(max(1.0, d), 1)  # Ensure a is at least the minimum value
+    return round(max(1.0, d), 1)  # Ensure d is at least 1.0
 
 def calculate_b_from_delta(delta, L):
     """Calculate b based on delta and L"""
@@ -74,13 +74,420 @@ def calculate_b_from_delta(delta, L):
     # Calculate b
     b = L / np.tan(delta_rad)
     
-    return round(max(0.5, b), 1)  # Ensure b is at least the minimum value
+    return round(max(0.5, b), 1)  # Ensure b is at least 0.5
+
+def calculate_L_from_delta_b(delta, b):
+    """Calculate L from delta and b"""
+    delta_rad = deg_to_rad(delta)
+    L = b * np.tan(delta_rad)
+    return round(max(1.0, L), 1)  # Ensure L is at least 1.0
+
+def calculate_h_from_tau_epsilon_L_f(tau, epsilon, L, f):
+    """Calculate h based on tau, epsilon, L, and f"""
+    tau_rad = deg_to_rad(tau)
+    epsilon_rad = deg_to_rad(epsilon)
+    
+    # Rearrange the tau equation to solve for h
+    h = L * np.sin(epsilon_rad) + np.tan(tau_rad - epsilon_rad) * (L * np.cos(epsilon_rad) + f)
+    
+    return round(max(0.5, h), 1)  # Ensure h is at least 0.5
+
+def calculate_f_from_tau_epsilon_h_L(tau, epsilon, h, L):
+    """Calculate f based on tau, epsilon, h, and L"""
+    tau_rad = deg_to_rad(tau)
+    epsilon_rad = deg_to_rad(epsilon)
+    
+    # Rearrange the tau equation to solve for f
+    denominator = np.tan(tau_rad - epsilon_rad)
+    
+    # Handle near-zero denominator
+    if abs(denominator) < 0.001:
+        return 0.5  # Default value
+    
+    f = (h - L * np.sin(epsilon_rad)) / denominator - L * np.cos(epsilon_rad)
+    
+    return round(max(0.1, f), 1)  # Ensure f is at least 0.1
+
+def calculate_L_from_tau_epsilon_h_f(tau, epsilon, h, f):
+    """Calculate L based on tau, epsilon, h, and f"""
+    tau_rad = deg_to_rad(tau)
+    epsilon_rad = deg_to_rad(epsilon)
+    
+    # Use numerical approach with 1000 test points
+    L_range = np.linspace(0.5, 20, 1000)  # Reasonable L range
+    min_error = float('inf')
+    best_L = 5.0  # Default
+    
+    for L_test in L_range:
+        calculated_tau_rad = epsilon_rad + np.arctan2(
+            h - L_test * np.sin(epsilon_rad), 
+            L_test * np.cos(epsilon_rad) + f
+        )
+        error = abs(calculated_tau_rad - tau_rad)
+        
+        if error < min_error:
+            min_error = error
+            best_L = L_test
+    
+    return round(best_L, 1)
+
+def calculate_epsilon_from_theta_d_h_L_f(theta, d, h, L, f):
+    """Calculate epsilon based on theta, d, h, L, and f using numerical approach"""
+    theta_rad = deg_to_rad(theta)
+    
+    # Use numerical approach with 1000 test points
+    epsilon_range = np.linspace(0, 89, 1000)  # Avoid 90 degrees
+    min_error = float('inf')
+    best_epsilon = 10.0  # Default
+    
+    for eps in epsilon_range:
+        eps_rad = deg_to_rad(eps)
+        
+        # Compute the denominator using the current epsilon value
+        denominator = np.sqrt((h - L * np.sin(eps_rad))**2 + (L * np.cos(eps_rad) + f)**2)
+        
+        # Calculate theta for this epsilon
+        calculated_theta_rad = np.arctan2(d/2, denominator)
+        error = abs(calculated_theta_rad - theta_rad)
+        
+        if error < min_error:
+            min_error = error
+            best_epsilon = eps
+    
+    return round(best_epsilon, 1)
+
+def calculate_h_from_theta_d_L_epsilon_f(theta, d, L, epsilon, f):
+    """Calculate h based on theta, d, L, epsilon, and f"""
+    theta_rad = deg_to_rad(theta)
+    epsilon_rad = deg_to_rad(epsilon)
+    
+    # Use numerical approach with 1000 test points
+    h_range = np.linspace(0.5, 30, 1000)  # Reasonable h range
+    min_error = float('inf')
+    best_h = 6.0  # Default
+    
+    for h_test in h_range:
+        # Compute denominator with the current h value
+        denominator = np.sqrt((h_test - L * np.sin(epsilon_rad))**2 + (L * np.cos(epsilon_rad) + f)**2)
+        
+        # Calculate theta for this h
+        calculated_theta_rad = np.arctan2(d/2, denominator)
+        error = abs(calculated_theta_rad - theta_rad)
+        
+        if error < min_error:
+            min_error = error
+            best_h = h_test
+    
+    return round(best_h, 1)
+
+def calculate_f_from_theta_d_h_L_epsilon(theta, d, h, L, epsilon):
+    """Calculate f based on theta, d, h, L, and epsilon"""
+    theta_rad = deg_to_rad(theta)
+    epsilon_rad = deg_to_rad(epsilon)
+    
+    # Use numerical approach with 1000 test points
+    f_range = np.linspace(0.1, 10, 1000)  # Reasonable f range
+    min_error = float('inf')
+    best_f = 0.5  # Default
+    
+    for f_test in f_range:
+        # Compute denominator with the current f value
+        denominator = np.sqrt((h - L * np.sin(epsilon_rad))**2 + (L * np.cos(epsilon_rad) + f_test)**2)
+        
+        # Calculate theta for this f
+        calculated_theta_rad = np.arctan2(d/2, denominator)
+        error = abs(calculated_theta_rad - theta_rad)
+        
+        if error < min_error:
+            min_error = error
+            best_f = f_test
+    
+    return round(best_f, 1)
+
+def calculate_L_from_theta_d_h_epsilon_f(theta, d, h, epsilon, f):
+    """Calculate L based on theta, d, h, epsilon, and f"""
+    theta_rad = deg_to_rad(theta)
+    epsilon_rad = deg_to_rad(epsilon)
+    
+    # Use numerical approach with 1000 test points
+    L_range = np.linspace(0.5, 20, 1000)  # Reasonable L range
+    min_error = float('inf')
+    best_L = 5.0  # Default
+    
+    for L_test in L_range:
+        # Compute denominator with the current L value
+        denominator = np.sqrt((h - L_test * np.sin(epsilon_rad))**2 + (L_test * np.cos(epsilon_rad) + f)**2)
+        
+        # Calculate theta for this L
+        calculated_theta_rad = np.arctan2(d/2, denominator)
+        error = abs(calculated_theta_rad - theta_rad)
+        
+        if error < min_error:
+            min_error = error
+            best_L = L_test
+    
+    return round(best_L, 1)
+
+def recalculate_parameters(params, changed_param=None, new_value=None):
+    """
+    Recalculate all dependent parameters when one parameter changes.
+    
+    Args:
+        params: Dictionary of current parameter values
+        changed_param: Name of the parameter that was changed
+        new_value: New value for the changed parameter
+        
+    Returns:
+        Updated parameters dictionary
+    """
+    # Create a copy of the parameters
+    updated_params = params.copy()
+    
+    # Update the changed parameter if provided
+    if changed_param and new_value is not None:
+        updated_params[changed_param] = new_value
+    
+    # Extract parameters for easier reference
+    epsilon = updated_params.get('epsilon', 10.0)
+    h = updated_params.get('h', 6.0)
+    L = updated_params.get('L', 5.0)
+    f = updated_params.get('f', 0.5)
+    d = updated_params.get('d', 10.0)
+    b = updated_params.get('b', 8.0)
+    tau = updated_params.get('tau', 0.0)
+    theta = updated_params.get('theta', 0.0)
+    delta = updated_params.get('delta', 0.0)
+    
+    # Define which parameter was changed and update dependencies accordingly
+    if changed_param == 'theta':
+        # If theta changes, update d
+        updated_params['d'] = calculate_d_from_theta(
+            new_value, h, L, epsilon, f
+        )
+        # tau is not affected by theta directly
+        
+    elif changed_param == 'tau':
+        # If tau changes, update epsilon
+        updated_params['epsilon'] = calculate_epsilon_from_tau(
+            new_value, h, L, f
+        )
+        # theta needs to be recalculated because epsilon changed
+        updated_params['theta'] = calculate_theta(
+            updated_params['d'], h, L, updated_params['epsilon'], f
+        )
+        
+    elif changed_param == 'delta':
+        # If delta changes, update b
+        updated_params['b'] = calculate_b_from_delta(
+            new_value, L
+        )
+        # Other parameters not affected
+        
+    elif changed_param == 'epsilon':
+        # If epsilon changes, update tau and theta
+        updated_params['tau'] = calculate_tau(
+            new_value, h, L, f
+        )
+        updated_params['theta'] = calculate_theta(
+            d, h, L, new_value, f
+        )
+        
+    elif changed_param == 'd':
+        # If d changes, update theta
+        updated_params['theta'] = calculate_theta(
+            new_value, h, L, epsilon, f
+        )
+        # Other parameters not affected
+        
+    elif changed_param == 'b':
+        # If b changes, update delta
+        updated_params['delta'] = calculate_delta(
+            L, new_value
+        )
+        # Other parameters not affected
+        
+    elif changed_param == 'L':
+        # If L changes, update tau, theta, and delta
+        updated_params['tau'] = calculate_tau(
+            epsilon, h, new_value, f
+        )
+        updated_params['theta'] = calculate_theta(
+            d, h, new_value, epsilon, f
+        )
+        updated_params['delta'] = calculate_delta(
+            new_value, b
+        )
+        
+    elif changed_param == 'h':
+        # If h changes, update tau and theta
+        updated_params['tau'] = calculate_tau(
+            epsilon, new_value, L, f
+        )
+        updated_params['theta'] = calculate_theta(
+            d, new_value, L, epsilon, f
+        )
+        # delta not affected
+        
+    elif changed_param == 'f':
+        # If f changes, update tau and theta
+        updated_params['tau'] = calculate_tau(
+            epsilon, h, L, new_value
+        )
+        updated_params['theta'] = calculate_theta(
+            d, h, L, epsilon, new_value
+        )
+        # delta not affected
+    
+    # If no parameter was changed, calculate all dependent values
+    else:
+        updated_params['tau'] = calculate_tau(epsilon, h, L, f)
+        updated_params['theta'] = calculate_theta(d, h, L, epsilon, f)
+        updated_params['delta'] = calculate_delta(L, b)
+    
+    return updated_params
+
+def validate_parameter_limits(params, param_name=None):
+    """
+    Validate that parameters are within acceptable ranges.
+    
+    Args:
+        params: Dictionary of parameter values
+        param_name: Optional specific parameter to validate
+        
+    Returns:
+        Dictionary with validation results
+    """
+    # Define acceptable ranges for parameters
+    param_limits = {
+        'epsilon': (0, 80),    # Support inclination (degrees)
+        'h': (0.5, 30),        # Distance between support foot and anchoring (m)
+        'L': (1, 20),          # Support length (m)
+        'f': (0.1, 10),        # Foundation overhang (m)
+        'd': (1, 50),          # Distance between supports (m)
+        'b': (0.5, 50),        # Distance between edge support and anchor (m)
+        'delta': (0, 89),      # Angle between horizontal and upper support beam (degrees)
+        'theta': (0, 89),      # Angle between vertical and retaining cable (degrees)
+        'tau': (0, 89),        # Angle between support axis and retaining cable axis (degrees)
+    }
+    
+    validation_results = {}
+    
+    # Check specific parameter or all parameters
+    params_to_check = [param_name] if param_name else param_limits.keys()
+    
+    for param in params_to_check:
+        if param in params and param in param_limits:
+            min_val, max_val = param_limits[param]
+            value = params[param]
+            
+            # Check if parameter is within limits
+            is_valid = min_val <= value <= max_val
+            message = ""
+            
+            if not is_valid:
+                if value < min_val:
+                    message = f"{param} is below minimum value of {min_val}"
+                else:
+                    message = f"{param} exceeds maximum value of {max_val}"
+            
+            validation_results[param] = {
+                'valid': is_valid,
+                'message': message,
+                'min': min_val,
+                'max': max_val,
+                'value': value
+            }
+    
+    return validation_results
+
+def update_parameter(params, param_name, new_value):
+    """
+    Update a single parameter and recalculate all dependent parameters.
+    This is the main entry point for the UI when a parameter is changed.
+    
+    Args:
+        params: Dictionary of current parameter values
+        param_name: Name of the parameter being updated
+        new_value: New value for the parameter
+        
+    Returns:
+        Updated parameters dictionary and list of parameters that changed
+    """
+    # Store original values to track changes
+    original_values = params.copy()
+    
+    # Call recalculate_parameters to update all dependent parameters
+    updated_params = recalculate_parameters(params, param_name, new_value)
+    
+    # Track which parameters changed (for UI highlighting/updates)
+    changed_params = []
+    for key in updated_params:
+        if key in original_values and updated_params[key] != original_values[key]:
+            changed_params.append(key)
+    
+    return updated_params, changed_params
+
+def apply_parameter_changes(params, param_name, new_value):
+    """
+    Apply parameter changes with validation and constraints.
+    This is the main function to call when a parameter is changed by the user.
+    
+    Args:
+        params: Current parameter values
+        param_name: Name of parameter being changed
+        new_value: New value for the parameter
+        
+    Returns:
+        Tuple containing:
+        - Updated parameters
+        - List of parameters that changed
+        - Validation results
+        - Warning messages (if any)
+    """
+    warnings = []
+    
+    # First validate the new value
+    test_params = params.copy()
+    test_params[param_name] = new_value
+    validation = validate_parameter_limits(test_params, param_name)
+    
+    # If the new value is invalid, adjust it to be within limits
+    if param_name in validation and not validation[param_name]['valid']:
+        if new_value < validation[param_name]['min']:
+            new_value = validation[param_name]['min']
+            warnings.append(f"{param_name} adjusted to minimum value of {new_value}")
+        elif new_value > validation[param_name]['max']:
+            new_value = validation[param_name]['max']
+            warnings.append(f"{param_name} adjusted to maximum value of {new_value}")
+    
+    # Update parameter and recalculate dependencies
+    updated_params, changed_params = update_parameter(params, param_name, new_value)
+    
+    # Validate all parameters that changed
+    full_validation = validate_parameter_limits(updated_params)
+    
+    # Check if any derived parameters are outside their limits
+    for param in changed_params:
+        if param in full_validation and not full_validation[param]['valid']:
+            if updated_params[param] < full_validation[param]['min']:
+                updated_params[param] = full_validation[param]['min']
+                warnings.append(f"{param} was constrained to minimum value of {updated_params[param]}")
+            elif updated_params[param] > full_validation[param]['max']:
+                updated_params[param] = full_validation[param]['max']
+                warnings.append(f"{param} was constrained to maximum value of {updated_params[param]}")
+    
+    # If any dependent parameters were constrained, recalculate everything one more time
+    if warnings:
+        updated_params = recalculate_parameters(updated_params)
+        # Update the changed parameters list
+        changed_params = [param for param in updated_params if updated_params[param] != params[param]]
+    
+    return updated_params, changed_params, full_validation, warnings
 
 def get_default_params():
     """Return default parameter values with calculated angles"""
     base_params = {
         'num_supports': 4,
-        # 'a': 10.0,
         'b': 8.0,
         'd': 10.0,
         'h': 6.0,
@@ -120,13 +527,13 @@ def get_default_params():
     
     return base_params
 
+# Keep the existing calculate_3d_coordinates function
 def calculate_3d_coordinates(params):
     """
     Calculate 3D coordinates for all components of the rockfall barrier
     based on the geometric parameters.
     """
     # Extract parameters
-    # a = params['a']  # Distance between anchors of retention cables
     b = params['b']  # Distance between edge support and anchor of upper support cable
     d = params['d']  # Distance between supports
     f = params['f']  # Overhang of foundation
@@ -481,3 +888,25 @@ def calculate_3d_coordinates(params):
     }
     
     return barrier_config
+
+def calculate_3d_coordinates_with_params(base_params, **param_changes):
+    """
+    Calculate 3D coordinates with parameter changes.
+    This is a wrapper around calculate_3d_coordinates that handles parameter interdependencies.
+    
+    Args:
+        base_params: Base parameter values
+        **param_changes: Keyword arguments for parameters to change
+        
+    Returns:
+        Updated barrier configuration
+    """
+    # Start with base parameters
+    updated_params = base_params.copy()
+    
+    # Apply each parameter change, calculating interdependencies
+    for param_name, new_value in param_changes.items():
+        updated_params, _, _, _ = apply_parameter_changes(updated_params, param_name, new_value)
+    
+    # Calculate 3D coordinates with the updated parameters
+    return calculate_3d_coordinates(updated_params)
