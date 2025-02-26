@@ -1,9 +1,14 @@
 import numpy as np
 import plotly.graph_objects as go
 from modules.geometry import deg_to_rad, get_default_params
+from modules.translations import get_translation
+import streamlit as st
 
 def create_barrier_diagram(barrier_config, results=None):
     """Create a 2D side view (x-z plane) diagram of the barrier"""
+    # Get current language
+    lang = st.session_state.get('language', 'en')
+    
     fig = go.Figure()
     
     # Extract configuration
@@ -48,7 +53,7 @@ def create_barrier_diagram(barrier_config, results=None):
         y=terrain_z,
         mode='lines',
         line=dict(color='brown', width=2, dash='dash'),
-        name='Terrain'
+        name=get_translation("terrain", lang)
     ))
     
     # Add supports
@@ -61,14 +66,16 @@ def create_barrier_diagram(barrier_config, results=None):
             continue
             
         # Add support line
+        support_name = support.get('name', f"{get_translation('support', lang)} {support_id}")
+        
         fig.add_trace(go.Scatter(
             x=[support['base']['x'], support['top']['x']],
             y=[support['base']['z'], support['top']['z']],
             mode='lines+markers',
             line=dict(color='black', width=3),
             marker=dict(symbol='square', size=10, color='white', line=dict(color='black', width=2)),
-            name=support.get('name', f"Support {support_id}"),
-            hovertext=f"{support.get('name', f'Support {support_id}')}: {results.get(support_id, 0):.1f} kN" if results else support.get('name', f"Support {support_id}")
+            name=support_name,
+            hovertext=f"{support_name}: {results.get(support_id, 0):.1f} kN" if results else support_name
         ))
         
         # Add support force annotation if results are provided
@@ -76,7 +83,7 @@ def create_barrier_diagram(barrier_config, results=None):
             fig.add_annotation(
                 x=support['base']['x'],
                 y=support['base']['z'] - 1,
-                text=f"{support.get('name', f'Support {support_id}')}: {results.get(support_id, 0):.1f} kN",
+                text=f"{support_name}: {results.get(support_id, 0):.1f} kN",
                 showarrow=False,
                 font=dict(size=10, color='black'),
                 bgcolor='white',
@@ -91,13 +98,15 @@ def create_barrier_diagram(barrier_config, results=None):
             continue
             
         if anchor_id.startswith('v'):  # Only retention cable anchors in main view
+            anchor_name = anchor.get('name', f"{get_translation('anchor', lang)} {anchor_id}")
+            
             fig.add_trace(go.Scatter(
                 x=[anchor['position']['x']],
                 y=[anchor['position']['z']],
                 mode='markers',
                 marker=dict(symbol='cross', size=12, color='black'),
-                name=anchor.get('name', f"Anchor {anchor_id}"),
-                hovertext=f"{anchor.get('name', f'Anchor {anchor_id}')}: {results.get(anchor_id, 0):.1f} kN" if results else anchor.get('name', f"Anchor {anchor_id}")
+                name=anchor_name,
+                hovertext=f"{anchor_name}: {results.get(anchor_id, 0):.1f} kN" if results else anchor_name
             ))
             
             # Add anchor force annotation if results are provided
@@ -105,7 +114,7 @@ def create_barrier_diagram(barrier_config, results=None):
                 fig.add_annotation(
                     x=anchor['position']['x'],
                     y=anchor['position']['z'] + 1,
-                    text=f"{anchor.get('name', f'Anchor {anchor_id}')}: {results.get(anchor_id, 0):.1f} kN",
+                    text=f"{anchor_name}: {results.get(anchor_id, 0):.1f} kN",
                     showarrow=False,
                     font=dict(size=10, color='green'),
                     bgcolor='white',
@@ -134,14 +143,17 @@ def create_barrier_diagram(barrier_config, results=None):
         # Determine line style based on load cell presence
         line_dash = None if cable.get('has_load_cell', False) else 'dot'
         
+        # Get cable name
+        cable_name = cable.get('name', f"{get_translation('cable', lang)} {cable_id}")
+        
         # Add cable line
         fig.add_trace(go.Scatter(
             x=[start_x, end_x],
             y=[start_z, end_z],
             mode='lines',
             line=dict(color=cable.get('color', 'gray'), width=2, dash=line_dash),
-            name=cable.get('name', f"Cable {cable_id}"),
-            hovertext=f"{cable.get('name', f'Cable {cable_id}')}: {cable.get('force', 0):.1f} kN" if cable.get('has_load_cell', False) else f"{cable.get('name', f'Cable {cable_id}')}: No measurement"
+            name=cable_name,
+            hovertext=f"{cable_name}: {cable.get('force', 0):.1f} kN" if cable.get('has_load_cell', False) else f"{cable_name}: {get_translation('no_measurement', lang)}"
         ))
         
         # Add load cell marker if applicable
@@ -161,14 +173,14 @@ def create_barrier_diagram(barrier_config, results=None):
                     line=dict(color='black', width=1)
                 ),
                 showlegend=False,
-                hovertext=f"Load cell: {cable.get('force', 0):.1f} kN"
+                hovertext=f"{get_translation('load_cell', lang)}: {cable.get('force', 0):.1f} kN"
             ))
     
     # Update layout
     fig.update_layout(
-        title="Rockfall Barrier Layout with Forces",
-        xaxis_title="X (m)",
-        yaxis_title="Z (m)",
+        title=get_translation("barrier_diagram_title", lang),
+        xaxis_title=f"X ({get_translation('meter', lang)})",
+        yaxis_title=f"Z ({get_translation('meter', lang)})",
         template="plotly_white",
         height=600,
         legend=dict(
@@ -183,6 +195,9 @@ def create_barrier_diagram(barrier_config, results=None):
 
 def create_top_view(barrier_config):
     """Create a top view of the barrier (x-y plane)"""
+    # Get current language
+    lang = st.session_state.get('language', 'en')
+    
     fig = go.Figure()
     
     # Extract configuration
@@ -196,12 +211,14 @@ def create_top_view(barrier_config):
         if 'base' not in support or 'x' not in support['base'] or 'y' not in support['base']:
             continue
             
+        support_name = support.get('name', f"{get_translation('support', lang)} {support_id}")
+        
         fig.add_trace(go.Scatter(
             x=[support['base']['x']],
             y=[support['base']['y']],
             mode='markers',
             marker=dict(symbol='square', size=10, color='white', line=dict(color='black', width=2)),
-            name=support.get('name', f"Support {support_id}")
+            name=support_name
         ))
     
     # Add anchors
@@ -210,12 +227,14 @@ def create_top_view(barrier_config):
         if 'position' not in anchor or 'x' not in anchor['position'] or 'y' not in anchor['position']:
             continue
             
+        anchor_name = anchor.get('name', f"{get_translation('anchor', lang)} {anchor_id}")
+        
         fig.add_trace(go.Scatter(
             x=[anchor['position']['x']],
             y=[anchor['position']['y']],
             mode='markers',
             marker=dict(symbol='cross', size=12, color='black'),
-            name=anchor.get('name', f"Anchor {anchor_id}")
+            name=anchor_name
         ))
     
     # Add cables
@@ -239,20 +258,22 @@ def create_top_view(barrier_config):
         # Determine line style based on load cell presence
         line_dash = None if cable.get('has_load_cell', False) else 'dot'
         
+        cable_name = cable.get('name', f"{get_translation('cable', lang)} {cable_id}")
+        
         # Add cable line
         fig.add_trace(go.Scatter(
             x=[start_x, end_x],
             y=[start_y, end_y],
             mode='lines',
             line=dict(color=cable.get('color', 'gray'), width=2, dash=line_dash),
-            name=cable.get('name', f"Cable {cable_id}")
+            name=cable_name
         ))
     
     # Update layout
     fig.update_layout(
-        title="Rockfall Barrier Layout (Top View)",
-        xaxis_title="X (m)",
-        yaxis_title="Y (m)",
+        title=get_translation("top_view_title", lang),
+        xaxis_title=f"X ({get_translation('meter', lang)})",
+        yaxis_title=f"Y ({get_translation('meter', lang)})",
         template="plotly_white",
         height=400,
         legend=dict(
@@ -273,6 +294,9 @@ def create_top_view(barrier_config):
 
 def create_3d_view(barrier_config, results=None):
     """Create a 3D view of the barrier configuration"""
+    # Get current language
+    lang = st.session_state.get('language', 'en')
+    
     fig = go.Figure()
     
     # Extract configuration
@@ -331,7 +355,7 @@ def create_3d_view(barrier_config, results=None):
         colorscale='Earth',
         opacity=0.8,
         showscale=False,
-        name='Terrain',
+        name=get_translation("terrain", lang),
         hoverinfo='skip'  # Disable hover for terrain
     ))
     
@@ -345,6 +369,10 @@ def create_3d_view(barrier_config, results=None):
         if ('x' not in support['base'] or 'y' not in support['base'] or 'z' not in support['base'] or
             'x' not in support['top'] or 'y' not in support['top'] or 'z' not in support['top']):
             continue
+        
+        # Get support name
+        support_name = support.get('name', f"{get_translation('support', lang)} {support_id}")
+        base_name = f"{get_translation('base', lang)} {support_name}"
         
         # Add grey cube at support base
         cube_size = 0.5  # Size of the cube
@@ -367,9 +395,15 @@ def create_3d_view(barrier_config, results=None):
             color='grey',
             opacity=1,
             flatshading=True,
-            name=f"Base {support.get('name', f'Support {support_id}')}",
+            name=base_name,
             hoverinfo='skip'
         ))
+            
+        # Prepare hover text
+        if results:
+            hover_text = f"{support_name} - {results.get(support_id, 0):.1f} kN"
+        else:
+            hover_text = support_name
             
         # Add support as 3D line (just the line, no markers for top/bottom)
         fig.add_trace(go.Scatter3d(
@@ -378,8 +412,8 @@ def create_3d_view(barrier_config, results=None):
             z=[support['base']['z'], support['top']['z']],
             mode='lines',  # Just lines, no markers
             line=dict(color='black', width=6),
-            name=support.get('name', f"Support {support_id}"),
-            text=f"{support.get('name', f'Support {support_id}')} - {results.get(support_id, 0):.1f} kN" if results else f"{support.get('name', f'Support {support_id}')}",
+            name=support_name,
+            text=hover_text,
             hoverinfo='text'
         ))
     
@@ -396,6 +430,15 @@ def create_3d_view(barrier_config, results=None):
         # Determine anchor color based on type
         color = 'red' if anchor_id.startswith('v') else 'green'
         
+        # Get anchor name
+        anchor_name = anchor.get('name', f"{get_translation('anchor', lang)} {anchor_id}")
+        
+        # Prepare hover text
+        if results:
+            hover_text = f"{anchor_name}: {results.get(anchor_id, 0):.1f} kN"
+        else:
+            hover_text = anchor_name
+        
         fig.add_trace(go.Scatter3d(
             x=[anchor['position']['x']],
             y=[anchor['position']['y']],
@@ -407,8 +450,8 @@ def create_3d_view(barrier_config, results=None):
                 symbol='cross',  # Use cross symbol as in original visualization
                 line=dict(color='black', width=1)
             ),
-            name=anchor.get('name', f"Anchor {anchor_id}"),
-            text=f"{anchor.get('name', f'Anchor {anchor_id}')}: {results.get(anchor_id, 0):.1f} kN" if results else f"{anchor.get('name', f'Anchor {anchor_id}')}",
+            name=anchor_name,
+            text=hover_text,
             hoverinfo='text'
         ))
     
@@ -434,6 +477,15 @@ def create_3d_view(barrier_config, results=None):
         # Get cable color based on type
         color = cable.get('color', 'gray')
         
+        # Get cable name
+        cable_name = cable.get('name', f"{get_translation('cable', lang)} {cable_id}")
+        
+        # Prepare hover text
+        if cable.get('has_load_cell', False):
+            hover_text = f"{cable_name} - {cable.get('force', 0):.1f} kN"
+        else:
+            hover_text = f"{cable_name}: {get_translation('no_measurement', lang)}"
+        
         # Add cable as 3D line
         fig.add_trace(go.Scatter3d(
             x=[start_x, end_x],
@@ -445,8 +497,8 @@ def create_3d_view(barrier_config, results=None):
                 width=4,
                 dash='solid' if cable.get('has_load_cell', False) else 'dash'
             ),
-            name=cable.get('name', f"Cable {cable_id}"),
-            text=f"{cable.get('name', f'Cable {cable_id}')} - {cable.get('force', 0):.1f} kN" if cable.get('has_load_cell', False) else f"{cable.get('name', f'Cable {cable_id}')}: No measurement",
+            name=cable_name,
+            text=hover_text,
             hoverinfo='text'
         ))
         
@@ -456,6 +508,9 @@ def create_3d_view(barrier_config, results=None):
             marker_x = (start_x + end_x) / 2
             marker_y = (start_y + end_y) / 2
             marker_z = (start_z + end_z) / 2
+            
+            load_cell_name = f"{get_translation('load_cell', lang)}: {cable_name}"
+            load_cell_text = f"{get_translation('load_cell', lang)}: {cable.get('force', 0):.1f} kN"
             
             fig.add_trace(go.Scatter3d(
                 x=[marker_x],
@@ -468,30 +523,30 @@ def create_3d_view(barrier_config, results=None):
                     symbol='circle',
                     line=dict(color='black', width=1)
                 ),
-                name=f"Load cell: {cable.get('name', cable_id)}",
-                text=f"Load cell: {cable.get('force', 0):.1f} kN",
+                name=load_cell_name,
+                text=load_cell_text,
                 hoverinfo='text',
                 showlegend=False
             ))
     
     # Update layout for 3D view - DISABLE GRID LINES ON HOVER
     fig.update_layout(
-        title="3D Rockfall Barrier Visualization",
+        title=get_translation("3d_view_title", lang),
         scene=dict(
             xaxis=dict(
-                title="X (m)",
+                title=f"X ({get_translation('meter', lang)})",
                 showspikes=False,  # Disable hover grid lines
                 showgrid=True,
                 zeroline=True
             ),
             yaxis=dict(
-                title="Y (m)",
+                title=f"Y ({get_translation('meter', lang)})",
                 showspikes=False,  # Disable hover grid lines
                 showgrid=True,
                 zeroline=True
             ),
             zaxis=dict(
-                title="Z (m)",
+                title=f"Z ({get_translation('meter', lang)})",
                 showspikes=False,  # Disable hover grid lines
                 showgrid=True,
                 zeroline=True

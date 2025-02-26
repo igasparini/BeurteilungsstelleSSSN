@@ -1,12 +1,19 @@
 import streamlit as st
-from config import CUSTOM_CSS, COPYRIGHT, APP_TITLE
+from config import CUSTOM_CSS, COPYRIGHT, APP_TITLE, get_config
+from modules.translations import get_translation
 from PIL import Image
 import os
 
 def landing_page():
     """Display the main landing page with tool selection"""
+    # Get current language
+    lang = st.session_state.get('language', 'en')
+    
+    # Get translated configuration
+    config = get_config()
+    
     # Apply custom CSS for better styling
-    st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
+    st.markdown(config["CUSTOM_CSS"], unsafe_allow_html=True)
     
     # Add additional CSS for logo positioning
     st.markdown("""
@@ -50,48 +57,48 @@ def landing_page():
     
     # Title centered under the logo
     st.markdown('<div class="title-container">', unsafe_allow_html=True)
-    st.markdown(f'<h1 style="text-align: center;">{APP_TITLE}</h1>', unsafe_allow_html=True)
-    st.markdown('<p style="text-align: center; color: #666;">Swiss Federal Assessment Center for Rockfall Protection</p>', unsafe_allow_html=True)
+    st.markdown(f'<h1 style="text-align: center;">{config["APP_TITLE"]}</h1>', unsafe_allow_html=True)
+    st.markdown(f'<p style="text-align: center; color: #666;">{get_translation("contact_info", lang)}</p>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
     
     st.markdown('</div>', unsafe_allow_html=True)
     
     # Centered "Select a Tool" heading
-    st.markdown('<h3 class="centered-title">Select a Tool</h3>', unsafe_allow_html=True)
+    st.markdown(f'<h3 class="centered-title">{get_translation("select_tool", lang)}</h3>', unsafe_allow_html=True)
     
     # Create two columns for the tool options
     col1, col2 = st.columns(2)
     
     with col1:
         # Tool card for the analyzer
-        st.markdown("""
+        st.markdown(f"""
         <div class="tool-card" id="analyzer-card">
-            <h3>Rockfall Barrier Analyzer</h3>
-            <p>Configure, analyze, and calculate forces for rockfall protection barriers.</p>
+            <h3>{get_translation("barrier_analyzer", lang)}</h3>
+            <p>{get_translation("analyzer_desc", lang)}</p>
         </div>
         """, unsafe_allow_html=True)
         
         # Button for analyzer that spans the entire width
-        if st.button("Rockfall Barrier Analyzer", key="analyzer_btn", use_container_width=True):
+        if st.button(get_translation("barrier_analyzer", lang), key="analyzer_btn", use_container_width=True):
             st.session_state.active_tool = 'analyzer'
             st.session_state.current_page = 'login'
             st.rerun()
     
     with col2:
         # Tool card for the layout tool
-        st.markdown("""
+        st.markdown(f"""
         <div class="tool-card" id="layout-card">
-            <h3>Rockfall Barrier Field Layout Tool</h3>
-            <p>Design and plan field layouts for rockfall protection installations.</p>
+            <h3>{get_translation("field_layout_tool", lang)}</h3>
+            <p>{get_translation("layout_desc", lang)}</p>
         </div>
         """, unsafe_allow_html=True)
         
         # Button for field layout tool that spans the entire width
-        if st.button("Rockfall Barrier Field Layout Tool", key="layout_btn", use_container_width=True):
+        if st.button(get_translation("field_layout_tool", lang), key="layout_btn", use_container_width=True):
             st.session_state.active_tool = 'field_layout'
             st.session_state.current_page = 'field_layout_tool'
             st.rerun()
     
     # Footer
     st.markdown('---')
-    st.markdown(f'<p style="text-align: center;">{COPYRIGHT}</p>', unsafe_allow_html=True)
+    st.markdown(f'<p style="text-align: center;">{config["COPYRIGHT"]}</p>', unsafe_allow_html=True)

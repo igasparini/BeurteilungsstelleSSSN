@@ -2,13 +2,14 @@ import streamlit as st
 import os
 from modules.auth import load_users
 from modules.data import init_barrier_config, load_barrier_config
-from pages.landing import landing_page
-from pages.login import login_page
-from pages.admin import admin_page
-from pages.analyzer import analyzer_page
-from pages.field_layout import field_layout_tool
+from modules.translations import get_translation
+from components.language_selector import language_selector
+from routes.landing import landing_page
+from routes.login import login_page
+from routes.admin import admin_page
+from routes.analyzer import analyzer_page
+from routes.field_layout import field_layout_tool
 
-# Set page configuration
 st.set_page_config(
     page_title="Beurteilungsstelle Steinschlagschutznetze",
     layout="wide",
@@ -35,6 +36,15 @@ if 'active_tool' not in st.session_state:
 
 if 'barrier_config' not in st.session_state:
     st.session_state.barrier_config = init_barrier_config()
+
+# Initialize language if not present (default to English)
+if 'language' not in st.session_state:
+    st.session_state.language = "en"
+
+# --- SIDEBAR WITH LANGUAGE SELECTOR ---
+with st.sidebar:
+    language_selector()
+    st.sidebar.markdown("---")
 
 # --- MAIN APPLICATION FLOW ---
 
