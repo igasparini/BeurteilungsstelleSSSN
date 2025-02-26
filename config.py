@@ -17,7 +17,7 @@ def get_config():
             'rhs': {'name': get_translation("rhs", lang), 'color': 'green'},
             'tso': {'name': get_translation("tso", lang), 'color': 'red'},
             'tsu': {'name': get_translation("tsu", lang), 'color': 'red'},
-            'fa': {'name': get_translation("fa", lang), 'color': 'gold'},
+            'zw': {'name': get_translation("zw", lang), 'color': 'gold'},
             'sa': {'name': get_translation("sa", lang), 'color': 'blue'}
         },
         "CUSTOM_CSS": """
@@ -80,7 +80,7 @@ CABLE_TYPES = {
     'rhs': {'name': 'Retention Cables (Rhs)', 'color': 'green'},
     'tso': {'name': 'Upper Support Cables (Tso)', 'color': 'red'},
     'tsu': {'name': 'Lower Support Cables (Tsu)', 'color': 'red'},
-    'fa': {'name': 'Catching Cables (Fa)', 'color': 'gold'},
+    'zw': {'name': 'Catching Cables (Zw)', 'color': 'gold'},
     'sa': {'name': 'Lateral Bracing (Sa)', 'color': 'blue'}
 }
 

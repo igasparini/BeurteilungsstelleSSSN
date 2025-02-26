@@ -62,7 +62,7 @@ def analyzer_page():
         st.subheader(get_translation("barrier_geometry", lang))
         
         # Create columns for parameters and schema
-        col1, col2 = st.columns([1, 1])
+        col1, col2 = st.columns([1, 1.5])
         
         with col1:
             # Basic barrier configuration

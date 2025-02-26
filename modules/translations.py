@@ -193,7 +193,7 @@ TRANSLATIONS = {
         "fr": "Câbles porteurs inférieurs (Tsu)",
         "it": "Funi portanti inferiori (Tsu)"
     },
-    "fa": {
+    "zw": {
         "en": "Catching Cables (Zw)",
         "de": "Zwischenseile (Zw)",
         "fr": "Câbles filants (Zw)",

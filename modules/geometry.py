@@ -4,14 +4,35 @@ def deg_to_rad(degrees):
     """Convert degrees to radians"""
     return degrees * np.pi / 180.0
 
+def rad_to_deg(radians):
+    """Convert radians to degrees"""
+    return radians * 180.0 / np.pi
+
+def calculate_tau(epsilon, h, L, f):
+    tau_rad = epsilon + np.arctan2(h - L * np.sin(epsilon), L * np.cos(epsilon) + f)
+    tau_deg = rad_to_deg(tau_rad)
+    return tau_rad, tau_deg
+
+def calculate_theta(a, h, L, epsilon, f):
+    numerator = a / 2
+    denominator = np.sqrt((h - L * np.sin(epsilon))**2 + (L * np.cos(epsilon) + f)**2)
+    beta_rad = np.arctan2(numerator, denominator)
+    beta_deg = rad_to_deg(beta_rad)
+    return beta_rad, beta_deg
+
+def calculate_delta(L, b):
+    delta_rad = np.arctan2(L, b)
+    delta_deg = rad_to_deg(delta_rad)
+    return delta_rad, delta_deg
+
 def get_default_params():
     """Return default parameter values"""
     return {
         'num_supports': 4,
-        'a': 8.0,
-        'b': 2.0,
+        'a': 10.0,
+        'b': 8.0,
         'd': 10.0,
-        'h': 2.0,
+        'h': 6.0,
         'f': 0.5,
         'L': 5.0,
         'theta': 30.0,
@@ -59,22 +80,37 @@ def calculate_3d_coordinates(params):
     cables = {}
     
     # Calculate terrain height at each position based on inclination
-    # Now terrain inclines along the x-axis (not y-axis)
     def terrain_height(x):
         return x * np.tan(phi)
     
     # Calculate support positions and orientations
     for i in range(params['num_supports']):
         # Support base position (x, y, z)
-        # CORRECTED: Posts are along the y-axis, not x-axis
+        # Posts are placed along the y-axis with x=0
         x = 0
         y = i * d
         z = terrain_height(x)
         
-        # Support top point calculation
-        top_x = x - L * np.sin(phi) * np.cos(epsilon) + L * np.cos(phi) * np.sin(epsilon)
-        top_y = y
-        top_z = z + L * np.cos(phi) * np.cos(epsilon) + L * np.sin(phi) * np.sin(epsilon)
+        # Step 1: Calculate direction vector for support considering both inclinations
+        # Normal to terrain is (-sin(phi), 0, cos(phi))
+        # Rotate this normal by epsilon in the x-z plane
+        normal_x = -np.sin(phi)
+        normal_z = np.cos(phi)
+        
+        # Apply rotation by epsilon around y-axis to the normal vector
+        # This gives the direction of the support
+        support_dir_x = normal_x * np.cos(epsilon) - normal_z * np.sin(epsilon)
+        support_dir_z = normal_x * np.sin(epsilon) + normal_z * np.cos(epsilon)
+        
+        # Normalize the direction vector
+        dir_length = np.sqrt(support_dir_x**2 + support_dir_z**2)
+        support_dir_x /= dir_length
+        support_dir_z /= dir_length
+        
+        # Calculate top position using the normalized direction
+        top_x = x + L * support_dir_x
+        top_y = y  # y-coordinate remains the same
+        top_z = z + L * support_dir_z
         
         supports[f's{i+1}'] = {
             'base': {'x': x, 'y': y, 'z': z},
@@ -83,6 +119,7 @@ def calculate_3d_coordinates(params):
             'name': f'S{i+1}'
         }
     
+    # Calculate retention cable anchor positions
     num_anchors = params['num_supports'] + 1
     for i in range(num_anchors):
         # Determine position based on field structure
@@ -93,15 +130,16 @@ def calculate_3d_coordinates(params):
             x = a 
             y = total_length + b
         else:
-            # Intermediate anchors are beside supports
-            x = a/2
+            # Intermediate anchors are at distance 'a' from the support line (x=0)
+            # and aligned with the supports along the y-axis
+            x = a
             y = (i-1) * d
         
         # Calculate anchor height based on terrain inclination
         z = terrain_height(x)
         
-        # Calculate height offset for retention cable anchors from terrain
-        z_offset = h 
+        # Add height offset h for retention cable anchors
+        z_offset = h
         
         # Anchor position (x, y, z)
         anchors[f'v{i+1}'] = {
@@ -109,8 +147,7 @@ def calculate_3d_coordinates(params):
             'name': f'V{i+1}'
         }
 
-    # Also need to adjust the other anchor positions for consistency
-    # Calculate positions for upper support cable anchors
+    # Calculate positions for upper support cable anchors (more distant from supports)
     anchors['tso1_anchor'] = {
         'position': {'x': b, 'y': -b, 'z': terrain_height(b)},
         'name': 'Tso1 Anchor'
@@ -121,7 +158,7 @@ def calculate_3d_coordinates(params):
         'name': 'Tso2 Anchor'
     }
 
-    # Calculate positions for lower support cable anchors
+    # Calculate positions for lower support cable anchors (closer to supports)
     anchors['tsu1_anchor'] = {
         'position': {'x': -b, 'y': -b, 'z': terrain_height(-b)},
         'name': 'Tsu1 Anchor'
@@ -285,9 +322,9 @@ def calculate_3d_coordinates(params):
         }
     }
     
-    # Create catching cables (Zwischenseil) between supports
+    # Create catching cables (Fangseile) between supports
     for i in range(params['num_supports'] - 1):
-        cable_id = f'faS{i+1}'
+        cable_id = f'zwS{i+1}'
         start_id = f's{i+1}'
         end_id = f's{i+2}'
         
