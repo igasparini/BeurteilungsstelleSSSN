@@ -255,47 +255,6 @@ def analyzer_page():
                 st.session_state.barrier_config = calculate_3d_coordinates(st.session_state.barrier_config['params'])
                 save_barrier_config(st.session_state.username, st.session_state.barrier_config)
                 st.success(get_translation("geometry_updated", lang))
-
-            # Display barrier schema
-            st.markdown(f"### {get_translation('barrier_schema', lang)}")
-
-            st.markdown('<div class="schema-container">', unsafe_allow_html=True)
-            schema_path = "assets/schema.png"  # Adjust path to match your schema location
-            
-            # Check if schema file exists
-            if os.path.exists(schema_path):
-                schema = Image.open(schema_path)
-                st.image(schema, use_container_width=True)  # Adjust width as needed
-            else:
-                # Fallback if image not found
-                st.warning("schema image not found. Please add the image file to assets/schema.png")
-                
-                # Placeholder rectangle for schema position
-                st.markdown("""
-                <div style="background-color: #f0f0f0; padding: 20px; border-radius: 10px; width: 200px; height: 80px; text-align: center;">
-                    <p style="margin: 0; color: #666;">schema</p>
-                </div>
-                """, unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-
-            st.markdown(f"""
-            **{get_translation('parameters', lang)}:**
-            
-            **θ ({get_translation('theta', lang)})**: {get_translation('theta_desc', lang)}
-            **δ ({get_translation('delta', lang)})**: {get_translation('delta_desc', lang)}
-            **δ₁ ({get_translation('delta1', lang)})**: {get_translation('delta1_desc', lang)}
-            **δ₂ ({get_translation('delta2', lang)})**: {get_translation('delta2_desc', lang)}
-            **ε ({get_translation('epsilon', lang)})**: {get_translation('epsilon_desc', lang)}
-            **τ ({get_translation('tau', lang)})**: {get_translation('tau_desc', lang)}
-            **φ ({get_translation('phi', lang)})**: {get_translation('phi_desc', lang)}
-            
-            **a**: {get_translation('a_desc', lang)}
-            **b**: {get_translation('b_desc', lang)}
-            **d**: {get_translation('d_desc', lang)}
-            **f**: {get_translation('f_desc', lang)}
-            **h**: {get_translation('h_desc', lang)}
-            **L**: {get_translation('L_desc', lang)}
-            """)
         
         with col2:
             # Display preview of barrier using current configuration
@@ -323,6 +282,52 @@ def analyzer_page():
             else:  # 3D View
                 view_3d = create_3d_view(st.session_state.barrier_config)
                 st.plotly_chart(view_3d, use_container_width=True, key="geometry_3d_view")
+
+        # Display barrier schema
+        st.markdown(f"### {get_translation('barrier_schema', lang)}")
+
+        st.markdown('<div class="schema-container">', unsafe_allow_html=True)
+        schema_path = "assets/schema.png"  # Adjust path to match your schema location
+        
+        # Check if schema file exists
+        if os.path.exists(schema_path):
+            schema = Image.open(schema_path)
+            st.image(schema, use_container_width=True)  # Adjust width as needed
+        else:
+            # Fallback if image not found
+            st.warning("schema image not found. Please add the image file to assets/schema.png")
+            
+            # Placeholder rectangle for schema position
+            st.markdown("""
+            <div style="background-color: #f0f0f0; padding: 20px; border-radius: 10px; width: 200px; height: 80px; text-align: center;">
+                <p style="margin: 0; color: #666;">schema</p>
+            </div>
+            """, unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        st.markdown(f"""
+        **{get_translation('parameters', lang)}:**""")
+
+        col1, col2 = st.columns([1, 1])
+        
+        with col1:
+            st.markdown(f"""
+                **θ ({get_translation('theta', lang)})**: {get_translation('theta_desc', lang)}<br>
+                **δ ({get_translation('delta', lang)})**: {get_translation('delta_desc', lang)}<br>
+                **δ₁ ({get_translation('delta1', lang)})**: {get_translation('delta1_desc', lang)}<br>
+                **δ₂ ({get_translation('delta2', lang)})**: {get_translation('delta2_desc', lang)}<br>
+                **ε ({get_translation('epsilon', lang)})**: {get_translation('epsilon_desc', lang)}<br>
+                **τ ({get_translation('tau', lang)})**: {get_translation('tau_desc', lang)}<br>
+                **φ ({get_translation('phi', lang)})**: {get_translation('phi_desc', lang)}""", unsafe_allow_html=True)
+        with col2:
+            st.markdown(f"""
+                **a**: {get_translation('a_desc', lang)}<br>
+                **b**: {get_translation('b_desc', lang)}<br>
+                **d**: {get_translation('d_desc', lang)}<br>
+                **f**: {get_translation('f_desc', lang)}<br>
+                **h**: {get_translation('h_desc', lang)}<br>
+                **L**: {get_translation('L_desc', lang)}
+                """, unsafe_allow_html=True)
     
     # Tab 2: Force Measurement
     with tabs[1]:

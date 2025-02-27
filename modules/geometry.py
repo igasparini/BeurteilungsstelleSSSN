@@ -260,31 +260,24 @@ def recalculate_parameters(params, changed_param=None, new_value=None):
     
     # Define which parameter was changed and update dependencies accordingly
     if changed_param == 'theta':
-        # If theta changes, update d
         updated_params['d'] = calculate_d_from_theta(
             new_value, h, L, epsilon, f
         )
-        # tau is not affected by theta directly
         
     elif changed_param == 'tau':
-        # If tau changes, update epsilon
         updated_params['epsilon'] = calculate_epsilon_from_tau(
             new_value, h, L, f
         )
-        # theta needs to be recalculated because epsilon changed
         updated_params['theta'] = calculate_theta(
             updated_params['d'], h, L, updated_params['epsilon'], f
         )
         
     elif changed_param == 'delta':
-        # If delta changes, update b
         updated_params['b'] = calculate_b_from_delta(
             new_value, L
         )
-        # Other parameters not affected
         
     elif changed_param == 'epsilon':
-        # If epsilon changes, update tau and theta
         updated_params['tau'] = calculate_tau(
             new_value, h, L, f
         )
@@ -293,21 +286,16 @@ def recalculate_parameters(params, changed_param=None, new_value=None):
         )
         
     elif changed_param == 'd':
-        # If d changes, update theta
         updated_params['theta'] = calculate_theta(
             new_value, h, L, epsilon, f
         )
-        # Other parameters not affected
         
     elif changed_param == 'b':
-        # If b changes, update delta
         updated_params['delta'] = calculate_delta(
             L, new_value
         )
-        # Other parameters not affected
         
     elif changed_param == 'L':
-        # If L changes, update tau, theta, and delta
         updated_params['tau'] = calculate_tau(
             epsilon, h, new_value, f
         )
@@ -319,24 +307,20 @@ def recalculate_parameters(params, changed_param=None, new_value=None):
         )
         
     elif changed_param == 'h':
-        # If h changes, update tau and theta
         updated_params['tau'] = calculate_tau(
             epsilon, new_value, L, f
         )
         updated_params['theta'] = calculate_theta(
             d, new_value, L, epsilon, f
         )
-        # delta not affected
         
     elif changed_param == 'f':
-        # If f changes, update tau and theta
         updated_params['tau'] = calculate_tau(
             epsilon, h, L, new_value
         )
         updated_params['theta'] = calculate_theta(
             d, h, L, epsilon, new_value
         )
-        # delta not affected
     
     # If no parameter was changed, calculate all dependent values
     else:
@@ -533,21 +517,19 @@ def calculate_3d_coordinates(params):
     Calculate 3D coordinates for all components of the rockfall barrier
     based on the geometric parameters.
     """
-    # Extract parameters
-    b = params['b']  # Distance between edge support and anchor of upper support cable
-    d = params['d']  # Distance between supports
-    f = params['f']  # Overhang of foundation
-    h = params['h']  # Distance between support base and retention cable anchor
-    L = params['L']  # Support length
+    b = params['b']
+    d = params['d']
+    f = params['f']
+    h = params['h']
+    L = params['L']
     
-    # Convert angles from degrees to radians
-    theta = deg_to_rad(params['theta'])  # Angle between vertical and retention cable
-    delta = deg_to_rad(params['delta'])  # Angle between horizontal and upper support cable
-    delta1 = deg_to_rad(params['delta1']) if params['has_delta1'] else None  # Intermediate cable 1
-    delta2 = deg_to_rad(params['delta2']) if params['has_delta2'] else None  # Intermediate cable 2
-    epsilon = deg_to_rad(params['epsilon'])  # Support inclination relative to vertical
-    tau = deg_to_rad(params['tau'])  # Angle between support axis and retention cable axis
-    phi = deg_to_rad(params['phi'])  # Terrain inclination
+    theta = deg_to_rad(params['theta'])
+    delta = deg_to_rad(params['delta'])
+    delta1 = deg_to_rad(params['delta1']) if params['has_delta1'] else None
+    delta2 = deg_to_rad(params['delta2']) if params['has_delta2'] else None
+    epsilon = deg_to_rad(params['epsilon'])  
+    tau = deg_to_rad(params['tau'])
+    phi = deg_to_rad(params['phi'])
     
     # Number of field sections (supports minus 1)
     num_fields = params['num_supports'] - 1
@@ -570,7 +552,7 @@ def calculate_3d_coordinates(params):
         # Posts are placed along the y-axis with x=0
         x = 0
         y = i * d
-        z = terrain_height(x)
+        z = 0
         
         # Step 1: Calculate direction vector for support considering both inclinations
         # Normal to terrain is (-sin(phi), 0, cos(phi))
@@ -599,10 +581,10 @@ def calculate_3d_coordinates(params):
             'length': L,
             'name': f'S{i+1}'
         }
-    
+
+    # Calculate position for retention cable anchors
     num_anchors = params['num_supports'] + 1
     for i in range(num_anchors):
-        # Determine y-position based on field structure
         if i == 0:  # First anchor
             y = -d/2
         elif i == num_anchors-1:  # Last anchor
@@ -610,96 +592,44 @@ def calculate_3d_coordinates(params):
         else:
             y = (i-1) * d + d/2
         
-        # Determine which support this anchor connects to
-        if i == 0:
-            support_index = 0
-        elif i == num_anchors-1:
-            support_index = params['num_supports'] - 1
-        else:
-            support_index = i - 1
-            
-        support_id = f's{support_index+1}'
-        
-        # Get the top position of the connected support
-        if support_id in supports:
-            support_top = supports[support_id]['top']
-            support_base = supports[support_id]['base']
-            
-            # Calculate direction vector for retention cable using tau angle
-            # tau is the angle between support axis and retention cable axis
-            
-            # First, create the support direction vector
-            support_dir = {
-                'x': support_top['x'] - support_base['x'],
-                'y': support_top['y'] - support_base['y'],
-                'z': support_top['z'] - support_base['z']
-            }
-            
-            # Calculate the retention cable direction based on tau angle
-            # This is a simplified calculation; a more sophisticated one would use proper 3D rotation
-            
-            # Place the anchor at a distance where the angle between support and cable is tau
-            # and the horizontal distance is approximately h
-            x = h
-            z = terrain_height(x)
-            
-            # Fine-tune z to achieve the desired tau angle
-            # This is an approximation
-            base_to_anchor_x = x - support_base['x']
-            base_to_anchor_z = z - support_base['z']
-            support_length_xz = np.sqrt(support_dir['x']**2 + support_dir['z']**2)
-            
-            # Calculate ideal z using tau angle constraint
-            # tau is the angle between support and retention cable
-            # This is simplified 2D calculation in the x-z plane
-            ideal_angle = tau - epsilon  # Adjusting for support inclination
-            
-            # Adjust z to achieve correct tau angle
-            ideal_z_offset = base_to_anchor_x * np.tan(ideal_angle)
-            z = support_base['z'] + ideal_z_offset
-            
-            # Final anchor position
-            anchors[f'v{i+1}'] = {
-                'position': {'x': x, 'y': y, 'z': z},
-                'name': f'V{i+1}'
-            }
-        else:
-            # Fallback if support not found
-            anchors[f'v{i+1}'] = {
-                'position': {'x': h, 'y': y, 'z': terrain_height(h)},
-                'name': f'V{i+1}'
-            }
+        x = np.cos(phi) * h
+        z = np.sin(phi) * h
 
-    # Calculate positions for upper support cable anchors (more distant from supports)
+        anchors[f'v{i+1}'] = {
+            'position': {'x': x, 'y': y, 'z': z},
+            'name': f'V{i+1}'
+        }
+
+    # Calculate positions for upper support cable anchors
     anchors['tso1_anchor'] = {
-        'position': {'x': b, 'y': -b, 'z': terrain_height(b)},
+        'position': {'x': 0, 'y': -b, 'z': 0},
         'name': 'Tso1 Anchor'
     }
 
     anchors['tso2_anchor'] = {
-        'position': {'x': b, 'y': total_length + b, 'z': terrain_height(b)},
+        'position': {'x': 0, 'y': total_length + b, 'z': 0},
         'name': 'Tso2 Anchor'
     }
 
     # Calculate positions for lower support cable anchors (closer to supports)
     anchors['tsu1_anchor'] = {
-        'position': {'x': -b, 'y': -b, 'z': terrain_height(-b)},
+        'position': {'x': 0, 'y': -b + 1.5, 'z': 0},
         'name': 'Tsu1 Anchor'
     }
 
     anchors['tsu2_anchor'] = {
-        'position': {'x': -b, 'y': total_length + b, 'z': terrain_height(-b)},
+        'position': {'x': 0, 'y': total_length + b - 1.5, 'z': 0},
         'name': 'Tsu2 Anchor'
     }
     
     # Calculate positions for lateral bracing anchors (seitliche Abspannung)
     anchors['sa1_anchor'] = {
-        'position': {'x': 0, 'y': -b, 'z': terrain_height(0)},
+        'position': {'x': 0, 'y': -b, 'z': 0},
         'name': 'Sa1 Anchor'
     }
     
     anchors['sa2_anchor'] = {
-        'position': {'x': 0, 'y': total_length + b, 'z': terrain_height(0)},
+        'position': {'x': 0, 'y': total_length + b, 'z': 0},
         'name': 'Sa2 Anchor'
     }
     
