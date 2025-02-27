@@ -545,7 +545,9 @@ def calculate_3d_coordinates(params):
     # Calculate terrain height at each position based on inclination
     def terrain_height(x):
         return x * np.tan(phi)
-    
+
+# ======= SUPPORTS =======
+
     # Calculate support positions and orientations
     for i in range(params['num_supports']):
         # Support base position (x, y, z)
@@ -581,6 +583,8 @@ def calculate_3d_coordinates(params):
             'length': L,
             'name': f'S{i+1}'
         }
+
+# ======= ANCHORS =======
 
     # Calculate position for retention cable anchors
     num_anchors = params['num_supports'] + 1
@@ -632,8 +636,10 @@ def calculate_3d_coordinates(params):
         'position': {'x': 0, 'y': total_length + b, 'z': 0},
         'name': 'Sa2 Anchor'
     }
-    
-    # Create retention cables (Rückhalteseile)
+
+# ======= CABLES =======
+
+## RETENTION CABLES (Rückhalteseile)
     for i in range(params['num_supports']):
         cable_id = f'rhs{i+1}'
         support_id = f's{i+1}'
@@ -693,102 +699,42 @@ def calculate_3d_coordinates(params):
             }
         }
     
-    # Create upper support cables (Tragseil oben)
-    cables['tsoS1'] = {
-        'start': 's1',
-        'end': 'tso1_anchor',
+## UPPER SUPPORT CABLES (Tragseil oben)
+    # First segment: First anchor to first support top
+    cables['tso_a1s1'] = {
+        'start': 'tso1_anchor',
+        'end': 's1',
         'type': 'tso',
-        'name': 'Tso S1',
+        'name': 'Tso A1-S1',
         'force': 0.0,
         'has_load_cell': True,
         'color': 'red',
         'start_coords': {
-            'x': supports['s1']['top']['x'],
-            'y': supports['s1']['top']['y'],
-            'z': supports['s1']['top']['z']
-        },
-        'end_coords': {
             'x': anchors['tso1_anchor']['position']['x'],
             'y': anchors['tso1_anchor']['position']['y'],
             'z': anchors['tso1_anchor']['position']['z']
-        }
-    }
-    
-    cables['tsoS4'] = {
-        'start': f's{params["num_supports"]}',
-        'end': 'tso2_anchor',
-        'type': 'tso',
-        'name': f'Tso S{params["num_supports"]}',
-        'force': 0.0,
-        'has_load_cell': True,
-        'color': 'red',
-        'start_coords': {
-            'x': supports[f's{params["num_supports"]}']['top']['x'],
-            'y': supports[f's{params["num_supports"]}']['top']['y'],
-            'z': supports[f's{params["num_supports"]}']['top']['z']
         },
         'end_coords': {
-            'x': anchors['tso2_anchor']['position']['x'],
-            'y': anchors['tso2_anchor']['position']['y'],
-            'z': anchors['tso2_anchor']['position']['z']
-        }
-    }
-    
-    # Create lower support cables (Tragseil unten)
-    cables['tsuS1'] = {
-        'start': 's1',
-        'end': 'tsu1_anchor',
-        'type': 'tsu',
-        'name': 'Tsu S1',
-        'force': 0.0,
-        'has_load_cell': True,
-        'color': 'red',
-        'start_coords': {
             'x': supports['s1']['top']['x'],
             'y': supports['s1']['top']['y'],
             'z': supports['s1']['top']['z']
-        },
-        'end_coords': {
-            'x': anchors['tsu1_anchor']['position']['x'],
-            'y': anchors['tsu1_anchor']['position']['y'],
-            'z': anchors['tsu1_anchor']['position']['z']
         }
     }
-    
-    cables['tsuS4'] = {
-        'start': f's{params["num_supports"]}',
-        'end': 'tsu2_anchor',
-        'type': 'tsu',
-        'name': f'Tsu S{params["num_supports"]}',
-        'force': 0.0,
-        'has_load_cell': True,
-        'color': 'red',
-        'start_coords': {
-            'x': supports[f's{params["num_supports"]}']['top']['x'],
-            'y': supports[f's{params["num_supports"]}']['top']['y'],
-            'z': supports[f's{params["num_supports"]}']['top']['z']
-        },
-        'end_coords': {
-            'x': anchors['tsu2_anchor']['position']['x'],
-            'y': anchors['tsu2_anchor']['position']['y'],
-            'z': anchors['tsu2_anchor']['position']['z']
-        }
-    }
-    
-    # Create catching cables (Fangseile) between supports
-    for i in range(params['num_supports'] - 1):
-        cable_id = f'zwS{i+1}'
-        start_id = f's{i+1}'
-        end_id = f's{i+2}'
+
+    # Middle segments: Support top to next support top
+    for i in range(1, params['num_supports']):
+        start_id = f's{i}'
+        end_id = f's{i+1}'
+        cable_id = f'tso_s{i}s{i+1}'
         
         cables[cable_id] = {
             'start': start_id,
             'end': end_id,
-            'type': 'zw',
-            'name': f'Zw S{i+1}',
+            'type': 'tso',
+            'name': f'Tso S{i}-S{i+1}',
             'force': 0.0,
-            'has_load_cell': True,
-            'color': 'gold',
+            'has_load_cell': False,
+            'color': 'red',
             'start_coords': {
                 'x': supports[start_id]['top']['x'],
                 'y': supports[start_id]['top']['y'],
@@ -800,8 +746,188 @@ def calculate_3d_coordinates(params):
                 'z': supports[end_id]['top']['z']
             }
         }
+
+    # Last segment: Last support top to second anchor
+    last_support = f's{params["num_supports"]}'
+    cables[f'tso_s{params["num_supports"]}a2'] = {
+        'start': last_support,
+        'end': 'tso2_anchor',
+        'type': 'tso',
+        'name': f'Tso S{params["num_supports"]}-A2',
+        'force': 0.0,
+        'has_load_cell': True,
+        'color': 'red',
+        'start_coords': {
+            'x': supports[last_support]['top']['x'],
+            'y': supports[last_support]['top']['y'],
+            'z': supports[last_support]['top']['z']
+        },
+        'end_coords': {
+            'x': anchors['tso2_anchor']['position']['x'],
+            'y': anchors['tso2_anchor']['position']['y'],
+            'z': anchors['tso2_anchor']['position']['z']
+        }
+    }
     
-    # Create lateral bracing cables (seitliche Abspannung)
+## LOWER SUPPORT CABLES (Tragseil unten)
+    # First segment: First anchor to first support base
+    cables['tsu_a1s1'] = {
+        'start': 'tsu1_anchor',
+        'end': 's1',
+        'type': 'tsu',
+        'name': 'Tsu A1-S1',
+        'force': 0.0,
+        'has_load_cell': True,
+        'color': 'red',
+        'start_coords': {
+            'x': anchors['tsu1_anchor']['position']['x'],
+            'y': anchors['tsu1_anchor']['position']['y'],
+            'z': anchors['tsu1_anchor']['position']['z']
+        },
+        'end_coords': {
+            'x': supports['s1']['base']['x'],
+            'y': supports['s1']['base']['y'],
+            'z': supports['s1']['base']['z']
+        }
+    }
+
+    # Middle segments: Support base to next support base
+    for i in range(1, params['num_supports']):
+        start_id = f's{i}'
+        end_id = f's{i+1}'
+        cable_id = f'tsu_s{i}s{i+1}'
+        
+        cables[cable_id] = {
+            'start': start_id,
+            'end': end_id,
+            'type': 'tsu',
+            'name': f'Tsu S{i}-S{i+1}',
+            'force': 0.0,
+            'has_load_cell': False,
+            'color': 'red',
+            'start_coords': {
+                'x': supports[start_id]['base']['x'],
+                'y': supports[start_id]['base']['y'],
+                'z': supports[start_id]['base']['z']
+            },
+            'end_coords': {
+                'x': supports[end_id]['base']['x'],
+                'y': supports[end_id]['base']['y'],
+                'z': supports[end_id]['base']['z']
+            }
+        }
+
+    # Last segment: Last support base to second anchor
+    last_support = f's{params["num_supports"]}'
+    cables[f'tsu_s{params["num_supports"]}a2'] = {
+        'start': last_support,
+        'end': 'tsu2_anchor',
+        'type': 'tsu',
+        'name': f'Tsu S{params["num_supports"]}-A2',
+        'force': 0.0,
+        'has_load_cell': True,
+        'color': 'red',
+        'start_coords': {
+            'x': supports[last_support]['base']['x'],
+            'y': supports[last_support]['base']['y'],
+            'z': supports[last_support]['base']['z']
+        },
+        'end_coords': {
+            'x': anchors['tsu2_anchor']['position']['x'],
+            'y': anchors['tsu2_anchor']['position']['y'],
+            'z': anchors['tsu2_anchor']['position']['z']
+        }
+    }
+    
+# CATCHING CABLES (Fangseile) between supports
+    # Calculate intermediate heights (50% of the way up each support)
+    for i in range(params['num_supports']):
+        support_id = f's{i+1}'
+        # Calculate intermediate position for this support (50% height)
+        mid_x = (supports[support_id]['base']['x'] + supports[support_id]['top']['x']) / 2
+        mid_y = supports[support_id]['base']['y']  # Keep same y-coordinate as base
+        mid_z = (supports[support_id]['base']['z'] + supports[support_id]['top']['z']) / 2
+        
+        # Add mid-point to support data
+        if 'mid' not in supports[support_id]:
+            supports[support_id]['mid'] = {}
+        
+        supports[support_id]['mid'] = {
+            'x': mid_x,
+            'y': mid_y,
+            'z': mid_z
+        }
+
+    # First segment: First anchor to first support mid-point
+    cables['zw_a1s1'] = {
+        'start': 'tso1_anchor',  # Using upper support cable anchor
+        'end': 's1',
+        'type': 'zw',
+        'name': 'Zw A1-S1',
+        'force': 0.0,
+        'has_load_cell': True,
+        'color': 'gold',
+        'start_coords': {
+            'x': anchors['tso1_anchor']['position']['x'],
+            'y': anchors['tso1_anchor']['position']['y'],
+            'z': anchors['tso1_anchor']['position']['z']
+        },
+        'end_coords': {
+            'x': supports['s1']['mid']['x'],
+            'y': supports['s1']['mid']['y'],
+            'z': supports['s1']['mid']['z']
+        }
+    }
+
+    # Middle segments: Connect intermediate points between supports
+    for i in range(1, params['num_supports']):
+        start_id = f's{i}'
+        end_id = f's{i+1}'
+        cable_id = f'zw_s{i}s{i+1}'
+        
+        cables[cable_id] = {
+            'start': start_id,
+            'end': end_id,
+            'type': 'zw',
+            'name': f'Zw S{i}-S{i+1}',
+            'force': 0.0,
+            'has_load_cell': False,
+            'color': 'gold',
+            'start_coords': {
+                'x': supports[start_id]['mid']['x'],
+                'y': supports[start_id]['mid']['y'],
+                'z': supports[start_id]['mid']['z']
+            },
+            'end_coords': {
+                'x': supports[end_id]['mid']['x'],
+                'y': supports[end_id]['mid']['y'],
+                'z': supports[end_id]['mid']['z']
+            }
+        }
+
+    # Last segment: Last support mid-point to second anchor
+    last_support = f's{params["num_supports"]}'
+    cables[f'zw_s{params["num_supports"]}a2'] = {
+        'start': last_support,
+        'end': 'tso2_anchor',  # Using upper support cable anchor
+        'type': 'zw',
+        'name': f'Zw S{params["num_supports"]}-A2',
+        'force': 0.0,
+        'has_load_cell': True,
+        'color': 'gold',
+        'start_coords': {
+            'x': supports[last_support]['mid']['x'],
+            'y': supports[last_support]['mid']['y'],
+            'z': supports[last_support]['mid']['z']
+        },
+        'end_coords': {
+            'x': anchors['tso2_anchor']['position']['x'],
+            'y': anchors['tso2_anchor']['position']['y'],
+            'z': anchors['tso2_anchor']['position']['z']
+        }
+    }
+    
+## LATERAL BRACING CABLES (seitliche Abspannung)
     cables['sa1'] = {
         'start': 's1',
         'end': 'sa1_anchor',

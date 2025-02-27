@@ -346,49 +346,70 @@ def analyzer_page():
             'tso': {'name': get_translation("tso", lang), 'cables': []},
             'tsu': {'name': get_translation("tsu", lang), 'cables': []},
             'fa': {'name': get_translation("fa", lang), 'cables': []},
-            'sa': {'name': get_translation("sa", lang), 'cables': []}
+            'sa': {'name': get_translation("sa", lang), 'cables': []},
+            'zw': {'name': get_translation("zw", lang), 'cables': []}  # Add catching cables if missing
         }
-        
-        # Group cables by type
+
+        # Group cables by type, filtering out intermediate segments
         for cable_id, cable in st.session_state.barrier_config['cables'].items():
             cable_type = cable.get('type', '')
-            if cable_type in cable_groups:
-                cable_groups[cable_type]['cables'].append((cable_id, cable))
-        
+            
+            # Check if this is an anchor-connected segment
+            is_anchor_segment = False
+            start_point = cable.get('start', '')
+            end_point = cable.get('end', '')
+            
+            # Only include anchor-connected segments
+            if (start_point in st.session_state.barrier_config['anchors'] or 
+                end_point in st.session_state.barrier_config['anchors']):
+                # This is an anchor-connected segment, include it
+                if cable_type in cable_groups:
+                    cable_groups[cable_type]['cables'].append((cable_id, cable))
+                
+                # Ensure it's marked as capable of having a load cell in the configuration
+                st.session_state.barrier_config['cables'][cable_id]['can_have_load_cell'] = True
+            else:
+                # This is an intermediate segment, don't include it in the UI
+                # But ensure it's marked as not capable of having a load cell in the configuration
+                st.session_state.barrier_config['cables'][cable_id]['can_have_load_cell'] = False
+                st.session_state.barrier_config['cables'][cable_id]['has_load_cell'] = False
+
         # Distribute cable groups across columns
         col_index = 0
         for group_type, group in cable_groups.items():
-            with force_cols[col_index % 3]:
-                st.markdown(f"#### {group['name']}")
-                
-                for cable_id, cable in group['cables']:
-                    # Create a row for each cable with force input and load cell toggle
-                    col1, col2 = st.columns([3, 1])
+            # Only show groups that have cables
+            if group['cables']:
+                with force_cols[col_index % 3]:
+                    st.markdown(f"#### {group['name']}")
                     
-                    with col1:
-                        # Force input field
-                        force = st.number_input(
-                            f"{cable['name']} {get_translation('force_kn', lang)}", 
-                            min_value=0.0, 
-                            value=float(cable['force']), 
-                            step=0.1,
-                            key=f"force_{cable_id}",
-                            format="%.1f"
-                        )
-                        st.session_state.barrier_config['cables'][cable_id]['force'] = force
+                    for cable_id, cable in group['cables']:
+                        # Create a row for each cable with force input and load cell toggle
+                        col1, col2 = st.columns([3, 1])
+                        
+                        with col1:
+                            # Force input field
+                            force = st.number_input(
+                                f"{cable['name']} {get_translation('force_kn', lang)}", 
+                                min_value=0.0, 
+                                value=float(cable['force']), 
+                                step=0.1,
+                                key=f"force_{cable_id}",
+                                format="%.1f"
+                            )
+                            st.session_state.barrier_config['cables'][cable_id]['force'] = force
+                        
+                        with col2:
+                            # Load cell toggle
+                            has_load_cell = st.checkbox(
+                                get_translation("load_cell", lang), 
+                                value=cable['has_load_cell'],
+                                key=f"load_cell_{cable_id}"
+                            )
+                            st.session_state.barrier_config['cables'][cable_id]['has_load_cell'] = has_load_cell
                     
-                    with col2:
-                        # Load cell toggle
-                        has_load_cell = st.checkbox(
-                            get_translation("load_cell", lang), 
-                            value=cable['has_load_cell'],
-                            key=f"load_cell_{cable_id}"
-                        )
-                        st.session_state.barrier_config['cables'][cable_id]['has_load_cell'] = has_load_cell
+                    st.markdown("---")
                 
-                st.markdown("---")
-            
-            col_index += 1
+                col_index += 1
         
         # Save force measurements button
         if st.button(get_translation("save_force_measurements", lang)):
