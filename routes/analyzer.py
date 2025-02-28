@@ -15,33 +15,39 @@ from modules.translations import get_translation
 from config import get_config
 import os
 from PIL import Image
+import copy
 
 def handle_parameter_change(param_name):
     """
     Handler for parameter changes with the name of the parameter that changed.
-    
-    Args:
-        param_name: The name of the parameter being changed
+    Only updates the params in session state, without recalculating coordinates.
     """
-    # Get the new value from session state
     new_value = st.session_state[f'param_{param_name}']
     
-    # Apply the parameter change with interdependencies
     params = st.session_state.barrier_config['params']
     updated_params, changed_params, validation, warnings = apply_parameter_changes(params, param_name, new_value)
     
-    # Update session state parameters
     st.session_state.barrier_config['params'] = updated_params
     
-    # Recalculate 3D coordinates with updated parameters
-    st.session_state.barrier_config = calculate_3d_coordinates(updated_params)
-    
-    # Save the updated configuration
-    save_barrier_config(st.session_state.username, st.session_state.barrier_config)
-    
-    # Display warnings if any
+    # Store any warnings for display
     if warnings:
-        st.warning("\n".join(warnings))
+        if 'param_warnings' not in st.session_state:
+            st.session_state.param_warnings = []
+        st.session_state.param_warnings.extend(warnings)
+
+def get_visualization_config(barrier_config):
+    """
+    Creates a modified barrier config for visualization that uses the display_phi
+    instead of the current phi value.
+    """
+    # Create a deep copy to avoid modifying the original
+    viz_config = copy.deepcopy(barrier_config)
+    
+    # Replace phi with the display version
+    if 'params' in viz_config and 'display_phi' in st.session_state:
+        viz_config['params']['phi'] = st.session_state.display_phi
+    
+    return viz_config
 
 def analyzer_page():
     """Display the main analyzer page with barrier configuration and force calculation"""
@@ -56,7 +62,14 @@ def analyzer_page():
     
     user_role = st.session_state.users[st.session_state.username].get("role", "user")
     user_name = st.session_state.users[st.session_state.username].get("name", st.session_state.username)
+
+    if 'param_warnings' not in st.session_state:
+        st.session_state.param_warnings = []
     
+    # Separate display_phi state to not retrigger plot rendering on each param update
+    if 'display_phi' not in st.session_state:
+        st.session_state.display_phi = st.session_state.barrier_config['params'].get('phi', 15.0)
+
     # Header with user info and logout button
     col1, col2, col3 = st.columns([3, 1, 1])
     with col1:
@@ -251,6 +264,14 @@ def analyzer_page():
             
             # Update geometry button
             if st.button(get_translation("update_barrier_geometry", lang)):
+                # Display any accumulated warnings before updating
+                if 'param_warnings' in st.session_state and st.session_state.param_warnings:
+                    st.warning("\n".join(st.session_state.param_warnings))
+                    st.session_state.param_warnings = []  # Clear warnings after showing them
+                
+                # Update the display_phi to match the current phi
+                st.session_state.display_phi = st.session_state.barrier_config['params']['phi']
+
                 # Recalculate 3D coordinates with current parameters
                 st.session_state.barrier_config = calculate_3d_coordinates(st.session_state.barrier_config['params'])
                 save_barrier_config(st.session_state.username, st.session_state.barrier_config)
@@ -274,13 +295,16 @@ def analyzer_page():
             
             # Display the selected view
             if view_type == get_translation("2d_side_view", lang):
-                side_view = create_barrier_diagram(st.session_state.barrier_config)
+                viz_config = get_visualization_config(st.session_state.barrier_config)
+                side_view = create_barrier_diagram(viz_config)
                 st.plotly_chart(side_view, use_container_width=True, key="geometry_side_view")
             elif view_type == get_translation("2d_top_view", lang):
-                top_view = create_top_view(st.session_state.barrier_config)
+                viz_config = get_visualization_config(st.session_state.barrier_config)
+                top_view = create_top_view(viz_config)
                 st.plotly_chart(top_view, use_container_width=True, key="geometry_top_view")
-            else:  # 3D View
-                view_3d = create_3d_view(st.session_state.barrier_config)
+            else:
+                viz_config = get_visualization_config(st.session_state.barrier_config)
+                view_3d = create_3d_view(viz_config)
                 st.plotly_chart(view_3d, use_container_width=True, key="geometry_3d_view")
 
         # Display barrier schema

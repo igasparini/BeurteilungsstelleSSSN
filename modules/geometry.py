@@ -257,6 +257,7 @@ def recalculate_parameters(params, changed_param=None, new_value=None):
     tau = updated_params.get('tau', 0.0)
     theta = updated_params.get('theta', 0.0)
     delta = updated_params.get('delta', 0.0)
+    phi = updated_params.get('phi', 15.0)
     
     # Define which parameter was changed and update dependencies accordingly
     if changed_param == 'theta':
@@ -321,6 +322,9 @@ def recalculate_parameters(params, changed_param=None, new_value=None):
         updated_params['theta'] = calculate_theta(
             d, h, L, epsilon, new_value
         )
+
+    elif changed_param == 'phi':
+        pass
     
     # If no parameter was changed, calculate all dependent values
     else:
@@ -352,6 +356,7 @@ def validate_parameter_limits(params, param_name=None):
         'delta': (0, 89),      # Angle between horizontal and upper support beam (degrees)
         'theta': (0, 89),      # Angle between vertical and retaining cable (degrees)
         'tau': (0, 89),        # Angle between support axis and retaining cable axis (degrees)
+        'phi': (0, 90),
     }
     
     validation_results = {}

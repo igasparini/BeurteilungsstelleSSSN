@@ -337,15 +337,74 @@ def create_3d_view(barrier_config, results=None):
     
     # Create a terrain mesh grid
     params = barrier_config.get('params', get_default_params())
+    phi = params['phi']
     phi_rad = deg_to_rad(params['phi'])
     
-    # Generate terrain points
-    x_terrain = np.linspace(x_min, x_max, 20)
-    y_terrain = np.linspace(y_min, y_max, 20)
-    x_grid, y_grid = np.meshgrid(x_terrain, y_terrain)
+    if phi == 90:
+        # For vertical terrain, create a vertical plane at x=0
+        n_points = 20
+        
+        # Create 2D arrays for the vertical plane
+        y_grid = np.linspace(y_min, y_max, n_points)
+        z_grid = np.linspace(-20, 20, n_points)
+        y_grid, z_grid = np.meshgrid(y_grid, z_grid)
+        
+        # Fixed x position at 0
+        x_grid = np.zeros_like(y_grid)
+
+    elif phi >= 87:
+        # Generate normal terrain grid points
+        x_terrain = np.linspace(x_min, x_max, 50)
+        y_terrain = np.linspace(y_min, y_max, 50)
+        x_grid, y_grid = np.meshgrid(x_terrain, y_terrain)
+        
+        # Calculate z values using terrain inclination and clip to reasonable range
+        z_grid = x_grid * np.tan(phi_rad)
+        z_grid = np.clip(z_grid, -20, 20)  # Limit to -20 to +20 range
+        x_grid = np.clip(x_grid, -1, 1)
+
+    elif phi >= 85:
+        # Generate normal terrain grid points
+        x_terrain = np.linspace(x_min, x_max, 50)
+        y_terrain = np.linspace(y_min, y_max, 50)
+        x_grid, y_grid = np.meshgrid(x_terrain, y_terrain)
+        
+        # Calculate z values using terrain inclination and clip to reasonable range
+        z_grid = x_grid * np.tan(phi_rad)
+        z_grid = np.clip(z_grid, -20, 20)  # Limit to -20 to +20 range
+        x_grid = np.clip(x_grid, -2, 2)
     
-    # Calculate z values for terrain using terrain inclination
-    z_grid = x_grid * np.tan(phi_rad)
+    elif phi >= 80:
+        # Generate normal terrain grid points
+        x_terrain = np.linspace(x_min, x_max, 50)
+        y_terrain = np.linspace(y_min, y_max, 50)
+        x_grid, y_grid = np.meshgrid(x_terrain, y_terrain)
+        
+        # Calculate z values using terrain inclination and clip to reasonable range
+        z_grid = x_grid * np.tan(phi_rad)
+        z_grid = np.clip(z_grid, -20, 20)  # Limit to -20 to +20 range
+        x_grid = np.clip(x_grid, -4, 4)
+
+    elif phi >= 70:
+        # Generate normal terrain grid points
+        x_terrain = np.linspace(x_min, x_max, 50)
+        y_terrain = np.linspace(y_min, y_max, 50)
+        x_grid, y_grid = np.meshgrid(x_terrain, y_terrain)
+        
+        # Calculate z values using terrain inclination and clip to reasonable range
+        z_grid = x_grid * np.tan(phi_rad)
+        z_grid = np.clip(z_grid, -25, 25)  # Limit to -20 to +20 range
+        # x_grid = np.clip(x_grid, -4, 4)
+
+    else:
+        # Generate normal terrain grid points
+        x_terrain = np.linspace(x_min, x_max, 20)
+        y_terrain = np.linspace(y_min, y_max, 20)
+        x_grid, y_grid = np.meshgrid(x_terrain, y_terrain)
+        
+        # Calculate z values using terrain inclination and clip to reasonable range
+        z_grid = x_grid * np.tan(phi_rad)
+        z_grid = np.clip(z_grid, -20, 20)  # Limit to -20 to +20 range
     
     # Add terrain surface (with hover disabled)
     fig.add_trace(go.Surface(
